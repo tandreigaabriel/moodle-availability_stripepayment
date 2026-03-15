@@ -1,0 +1,11 @@
+{
+  "moodle-availability_stripepayment-form": {
+    "requires": [
+        "base",
+        "node",
+        "event",
+        "moodle-core_availability-form"
+    ]
+  }
+}
+

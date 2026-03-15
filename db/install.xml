@@ -1,0 +1,39 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<XMLDB PATH="availability/condition/stripepayment/db" VERSION="20250616" COMMENT="Stripe availability condition">
+  <TABLES>
+    <TABLE NAME="availability_stripepayment_payments" COMMENT="Stripe payment records">
+      <FIELDS>
+        <FIELD NAME="id" TYPE="int" LENGTH="10" NOTNULL="true" SEQUENCE="true"/>
+
+        <FIELD NAME="userid" TYPE="int" LENGTH="10" NOTNULL="true"/>
+        <FIELD NAME="courseid" TYPE="int" LENGTH="10" NOTNULL="true"/>
+        <FIELD NAME="cmid" TYPE="int" LENGTH="10" NOTNULL="true"/>
+
+        <FIELD NAME="stripe_session_id" TYPE="char" LENGTH="255" NOTNULL="true"/>
+        <FIELD NAME="stripe_payment_intent" TYPE="char" LENGTH="255" NOTNULL="false"/>
+
+        <FIELD NAME="amount" TYPE="int" LENGTH="10" NOTNULL="true" COMMENT="Amount in minor currency units (e.g. 3500 = £35.00)"/>
+        <FIELD NAME="currency" TYPE="char" LENGTH="3" NOTNULL="true" DEFAULT="USD"/>
+
+        <FIELD NAME="status" TYPE="char" LENGTH="20" NOTNULL="true" DEFAULT="pending"/>
+
+        <FIELD NAME="timecreated" TYPE="int" LENGTH="10" NOTNULL="true"/>
+        <FIELD NAME="timemodified" TYPE="int" LENGTH="10" NOTNULL="true"/>
+      </FIELDS>
+
+      <KEYS>
+        <KEY NAME="primary" TYPE="primary" FIELDS="id"/>
+        <KEY NAME="userid" TYPE="foreign" FIELDS="userid" REFTABLE="user" REFFIELDS="id"/>
+        <KEY NAME="courseid" TYPE="foreign" FIELDS="courseid" REFTABLE="course" REFFIELDS="id"/>
+      </KEYS>
+
+      <INDEXES>
+        <INDEX NAME="userid_cmid" UNIQUE="false" FIELDS="userid,cmid"/>
+        <INDEX NAME="cmid" UNIQUE="false" FIELDS="cmid"/>
+        <INDEX NAME="status" UNIQUE="false" FIELDS="status"/>
+        <INDEX NAME="stripe_session" UNIQUE="true" FIELDS="stripe_session_id"/>
+      </INDEXES>
+
+    </TABLE>
+  </TABLES>
+</XMLDB>

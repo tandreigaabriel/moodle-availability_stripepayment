@@ -1,0 +1,11 @@
+{
+    "name": "moodle/availability-stripe",
+    "description": "Stripe payment availability condition for Moodle",
+    "type": "moodle-plugin",
+    "require": {
+        "stripe/stripe-php": "^13.0"
+    },
+    "config": {
+        "vendor-dir": "vendor"
+    }
+}

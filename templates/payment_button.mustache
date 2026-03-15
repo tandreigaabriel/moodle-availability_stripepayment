@@ -1,0 +1,22 @@
+{{!
+    Template: availability_stripepayment/payment_button
+
+    Renders the payment prompt and pay button inside the availability info area
+    of a locked activity. Rendered server-side by condition::get_either_description().
+
+    Context variables:
+      - payurl      (string) Payment URL (raw, not HTML-encoded — template handles escaping)
+      - description (string) Pre-HTML-escaped description text
+
+    @package    availability_stripepayment
+    @copyright  2025 Andrei Toma <https://www.tagwebdesign.co.uk>
+    @license    https://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
+}}
+<div class="availability-stripe-payment">
+    <p class="availability-stripe-description">{{{description}}}</p>
+    <a href="{{payurl}}"
+       class="btn btn-primary btn-sm availability-stripe-pay-btn"
+       data-availability-stripe-pay="1">
+        {{#str}} pay_now, availability_stripepayment {{/str}}
+    </a>
+</div>
