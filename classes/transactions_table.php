@@ -86,7 +86,8 @@ class transactions_table extends \table_sql
      * Resolve the activity instance name directly from the module table.
      * Uses modname_raw (e.g. "assign") + cm_instance to do a single targeted lookup.
      */
-    private function get_activity_name($data): string {
+    private function get_activity_name($data): string
+    {
         global $DB;
 
         if (!empty($data->modname_raw) && !empty($data->cm_instance)) {
@@ -112,7 +113,7 @@ class transactions_table extends \table_sql
     {
         global $PAGE;
 
-        $item_name   = $this->get_activity_name($data);
+        $item_name = $this->get_activity_name($data);
         $course_part = $data->course_shortname . ' / ';
 
         if ($this->is_downloading()) {
@@ -126,7 +127,7 @@ class transactions_table extends \table_sql
 
         $modname = $data->modname_raw ?? '';
         if ($modname && $data->cmid) {
-            $url  = new \moodle_url('/mod/' . $modname . '/view.php', ['id' => $data->cmid]);
+            $url = new \moodle_url('/mod/' . $modname . '/view.php', ['id' => $data->cmid]);
             $link = \html_writer::link($url, $item_name);
         } else {
             $link = $item_name;
@@ -166,7 +167,7 @@ class transactions_table extends \table_sql
      */
     public function col_amount($data)
     {
-        $zero_decimal = ['BIF','CLP','DJF','GNF','JPY','KMF','KRW','MGA','PYG','RWF','UGX','VND','VUV','XAF','XOF','XPF'];
+        $zero_decimal = ['BIF', 'CLP', 'DJF', 'GNF', 'JPY', 'KMF', 'KRW', 'MGA', 'PYG', 'RWF', 'UGX', 'VND', 'VUV', 'XAF', 'XOF', 'XPF'];
         $decimals = in_array(strtoupper($data->currency), $zero_decimal) ? 0 : 2;
         return number_format($data->amount, $decimals);
     }
@@ -228,10 +229,10 @@ class transactions_table extends \table_sql
         $short_id = substr($data->stripe_session_id, 0, 8) . '…' . substr($data->stripe_session_id, -8);
 
         $copybutton = \html_writer::tag('button', '📋', [
-            'class'   => 'btn btn-sm btn-outline-secondary ms-1',
+            'class' => 'btn btn-sm btn-outline-secondary ms-1',
             'onclick' => "navigator.clipboard.writeText('" . s($data->stripe_session_id) . "'); this.innerText='✅'; setTimeout(() => this.innerText='📋', 1000);",
-            'title'   => get_string('copytransactionid', 'availability_stripepayment'),
-            'type'    => 'button',
+            'title' => get_string('copytransactionid', 'availability_stripepayment'),
+            'type' => 'button',
         ]);
 
         return \html_writer::span($short_id, 'font-monospace', ['title' => $data->stripe_session_id]) . $copybutton;
@@ -277,8 +278,8 @@ class transactions_table extends \table_sql
 
         return \html_writer::link($stripe_url, '🔗 Stripe', [
             'target' => '_blank',
-            'class'  => 'btn btn-sm btn-outline-primary',
-            'title'  => get_string('viewinstripe', 'availability_stripepayment'),
+            'class' => 'btn btn-sm btn-outline-primary',
+            'title' => get_string('viewinstripe', 'availability_stripepayment'),
         ]);
     }
 
@@ -289,9 +290,9 @@ class transactions_table extends \table_sql
     {
         global $DB;
 
-        $total_payments     = $DB->count_records('availability_stripepayment_payments');
+        $total_payments = $DB->count_records('availability_stripepayment_payments');
         $completed_payments = $DB->count_records('availability_stripepayment_payments', ['status' => 'completed']);
-        $pending_payments   = $DB->count_records('availability_stripepayment_payments', ['status' => 'pending']);
+        $pending_payments = $DB->count_records('availability_stripepayment_payments', ['status' => 'pending']);
 
         $revenue_rows = $DB->get_records_sql(
             "SELECT currency, SUM(amount) AS total
@@ -301,7 +302,7 @@ class transactions_table extends \table_sql
               ORDER BY currency"
         );
 
-        $zero_decimal = ['BIF','CLP','DJF','GNF','JPY','KMF','KRW','MGA','PYG','RWF','UGX','VND','VUV','XAF','XOF','XPF'];
+        $zero_decimal = ['BIF', 'CLP', 'DJF', 'GNF', 'JPY', 'KMF', 'KRW', 'MGA', 'PYG', 'RWF', 'UGX', 'VND', 'VUV', 'XAF', 'XOF', 'XPF'];
 
         // ── Row 1: three metric cards (always equal thirds) ──────────────────
         echo \html_writer::start_div('row g-3 mb-3');
@@ -350,7 +351,7 @@ class transactions_table extends \table_sql
             foreach ($revenue_rows as $rev) {
                 $currency = strtoupper($rev->currency);
                 $decimals = in_array($currency, $zero_decimal) ? 0 : 2;
-                $amount   = number_format($rev->total, $decimals);
+                $amount = number_format($rev->total, $decimals);
                 echo \html_writer::tag(
                     'li',
                     \html_writer::tag('span', $currency, ['class' => 'badge bg-warning text-dark me-1']) .

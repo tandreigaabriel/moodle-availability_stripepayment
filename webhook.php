@@ -5,6 +5,14 @@
 // it under the terms of the GNU General Public License as published by
 // the Free Software Foundation, either version 3 of the License, or
 // (at your option) any later version.
+//
+// Moodle is distributed in the hope that it will be useful,
+// but WITHOUT ANY WARRANTY; without even the implied warranty of
+// MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+// GNU General Public License for more details.
+//
+// You should have received a copy of the GNU General Public License
+// along with Moodle.  If not, see <https://www.gnu.org/licenses/>.
 
 /**
  * Stripe webhook endpoint — processes checkout.session.completed events.
@@ -31,7 +39,7 @@ $USER->id = 0;
 // Only POST requests allowed
 if ($_SERVER['REQUEST_METHOD'] !== 'POST') {
     http_response_code(405);
-    exit('Method not allowed');
+    exit(get_string('webhook_method_not_allowed', 'availability_stripepayment'));
 }
 
 // Read raw payload
@@ -40,12 +48,12 @@ $sigheader = $_SERVER['HTTP_STRIPE_SIGNATURE'] ?? '';
 
 if (!$payload) {
     http_response_code(400);
-    exit('Empty payload');
+    exit(get_string('webhook_empty_payload', 'availability_stripepayment'));
 }
 
 if (!$sigheader) {
     http_response_code(400);
-    exit('Missing Stripe signature');
+    exit(get_string('webhook_missing_signature', 'availability_stripepayment'));
 }
 
 // Plugin config
@@ -54,7 +62,7 @@ $config = get_config('availability_stripepayment');
 if (empty($config->webhook_secret)) {
     debugging('[availability_stripepayment] Webhook secret not configured', DEBUG_DEVELOPER);
     http_response_code(500);
-    exit('Webhook secret not configured');
+    exit(get_string('webhook_secret_not_configured', 'availability_stripepayment'));
 }
 
 // Verify Stripe signature
@@ -69,18 +77,18 @@ try {
 } catch (\UnexpectedValueException $e) {
 
     http_response_code(400);
-    exit('Invalid payload');
+    exit(get_string('webhook_invalid_payload', 'availability_stripepayment'));
 
 } catch (\Stripe\Exception\SignatureVerificationException $e) {
 
     http_response_code(400);
-    exit('Invalid signature');
+    exit(get_string('webhook_invalid_signature', 'availability_stripepayment'));
 
 } catch (Exception $e) {
 
     debugging('[availability_stripepayment] Webhook exception: ' . $e->getMessage(), DEBUG_DEVELOPER);
     http_response_code(400);
-    exit('Webhook error');
+    exit(get_string('webhook_error', 'availability_stripepayment'));
 }
 
 
@@ -98,7 +106,7 @@ try {
         if ($session->payment_status !== 'paid') {
 
             http_response_code(200);
-            echo json_encode(['status' => 'ignored', 'reason' => 'payment not completed']);
+            echo json_encode(['status' => 'ignored', 'reason' => get_string('webhook_payment_not_completed', 'availability_stripepayment')]);
             exit;
         }
 
@@ -115,7 +123,10 @@ try {
             );
 
             http_response_code(200);
-            echo json_encode(['status' => 'ok', 'note' => 'payment record not found']);
+            echo json_encode([
+                'status' => 'ok',
+                'note' => get_string('payment_not_found', 'availability_stripepayment')
+            ]);
             exit;
         }
 
@@ -123,7 +134,7 @@ try {
         if ($payment->status === 'completed') {
 
             http_response_code(200);
-            echo json_encode(['status' => 'ok', 'note' => 'already processed']);
+            echo json_encode(['status' => 'ok', 'note' => get_string('webhook_already_processed', 'availability_stripepayment')]);
             exit;
         }
 

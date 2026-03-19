@@ -27,11 +27,19 @@ namespace availability_stripepayment\privacy;
 defined('MOODLE_INTERNAL') || die();
 
 use core_privacy\local\metadata\collection;
+use core_privacy\local\request\approved_contextlist;
+use core_privacy\local\request\approved_userlist;
+use core_privacy\local\request\contextlist;
+use core_privacy\local\request\userlist;
+use core_privacy\local\request\writer;
 
 /**
  * Privacy provider implementation.
  */
-class provider implements \core_privacy\local\metadata\provider {
+class provider implements
+    \core_privacy\local\metadata\provider,
+    \core_privacy\local\request\plugin\provider,
+    \core_privacy\local\request\core_userlist_provider {
 
     /**
      * Returns metadata about stored user data.
@@ -40,7 +48,6 @@ class provider implements \core_privacy\local\metadata\provider {
      * @return collection
      */
     public static function get_metadata(collection $collection): collection {
-
         $collection->add_database_table(
             'availability_stripepayment_payments',
             [
@@ -57,5 +64,140 @@ class provider implements \core_privacy\local\metadata\provider {
         );
 
         return $collection;
+    }
+
+    /**
+     * Returns all contexts that have data for the given user.
+     *
+     * @param int $userid
+     * @return contextlist
+     */
+    public static function get_contexts_for_userid(int $userid): contextlist {
+        $contextlist = new contextlist();
+        $contextlist->add_from_sql(
+            "SELECT ctx.id
+               FROM {context} ctx
+               JOIN {course_modules} cm ON cm.id = ctx.instanceid AND ctx.contextlevel = :contextlevel
+               JOIN {availability_stripepayment_payments} p ON p.cmid = cm.id
+              WHERE p.userid = :userid",
+            ['contextlevel' => CONTEXT_MODULE, 'userid' => $userid]
+        );
+        return $contextlist;
+    }
+
+    /**
+     * Returns all users that have data in the given context.
+     *
+     * @param userlist $userlist
+     */
+    public static function get_users_in_context(userlist $userlist) {
+        $context = $userlist->get_context();
+        if (!$context instanceof \context_module) {
+            return;
+        }
+        $userlist->add_from_sql(
+            'userid',
+            "SELECT p.userid
+               FROM {availability_stripepayment_payments} p
+              WHERE p.cmid = :cmid",
+            ['cmid' => $context->instanceid]
+        );
+    }
+
+    /**
+     * Exports user data for the given approved contexts.
+     *
+     * @param approved_contextlist $contextlist
+     */
+    public static function export_user_data(approved_contextlist $contextlist) {
+        global $DB;
+
+        if (empty($contextlist->count())) {
+            return;
+        }
+
+        $userid = $contextlist->get_user()->id;
+
+        foreach ($contextlist->get_contexts() as $context) {
+            if (!$context instanceof \context_module) {
+                continue;
+            }
+            $payments = $DB->get_records('availability_stripepayment_payments', [
+                'userid' => $userid,
+                'cmid'   => $context->instanceid,
+            ]);
+            if (!$payments) {
+                continue;
+            }
+            $data = array_values(array_map(function($p) {
+                return [
+                    'courseid'          => $p->courseid,
+                    'cmid'              => $p->cmid,
+                    'stripe_session_id' => $p->stripe_session_id,
+                    'amount'            => $p->amount,
+                    'currency'          => $p->currency,
+                    'status'            => $p->status,
+                    'timecreated'       => \core_privacy\local\request\transform::datetime($p->timecreated),
+                ];
+            }, $payments));
+            writer::with_context($context)->export_data(
+                [get_string('pluginname', 'availability_stripepayment')],
+                (object)['payments' => $data]
+            );
+        }
+    }
+
+    /**
+     * Deletes all data for all users in the given context.
+     *
+     * @param \context $context
+     */
+    public static function delete_data_for_all_users_in_context(\context $context) {
+        global $DB;
+        if (!$context instanceof \context_module) {
+            return;
+        }
+        $DB->delete_records('availability_stripepayment_payments', ['cmid' => $context->instanceid]);
+    }
+
+    /**
+     * Deletes data for the given user in approved contexts.
+     *
+     * @param approved_contextlist $contextlist
+     */
+    public static function delete_data_for_user(approved_contextlist $contextlist) {
+        global $DB;
+        if (empty($contextlist->count())) {
+            return;
+        }
+        $userid = $contextlist->get_user()->id;
+        foreach ($contextlist->get_contexts() as $context) {
+            if (!$context instanceof \context_module) {
+                continue;
+            }
+            $DB->delete_records('availability_stripepayment_payments', [
+                'userid' => $userid,
+                'cmid'   => $context->instanceid,
+            ]);
+        }
+    }
+
+    /**
+     * Deletes data for users in approved userlist.
+     *
+     * @param approved_userlist $userlist
+     */
+    public static function delete_data_for_users(approved_userlist $userlist) {
+        global $DB;
+        $context = $userlist->get_context();
+        if (!$context instanceof \context_module) {
+            return;
+        }
+        list($usersql, $userparams) = $DB->get_in_or_equal($userlist->get_userids(), SQL_PARAMS_NAMED);
+        $DB->delete_records_select(
+            'availability_stripepayment_payments',
+            "cmid = :cmid AND userid {$usersql}",
+            array_merge(['cmid' => $context->instanceid], $userparams)
+        );
     }
 }

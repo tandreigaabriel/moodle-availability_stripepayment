@@ -39,7 +39,7 @@ $payment = $DB->get_record('availability_stripepayment_payments', [
 
 if (!$payment) {
     redirect(new moodle_url('/my'),
-             'Payment record not found.',
+             get_string('payment_not_found', 'availability_stripepayment'),
              null,
              \core\output\notification::NOTIFY_ERROR);
 }
@@ -47,7 +47,7 @@ if (!$payment) {
 $cm = get_coursemodule_from_id('', $payment->cmid);
 if (!$cm) {
     redirect(new moodle_url('/course/view.php', ['id' => $payment->courseid]),
-             'Activity not found.',
+             get_string('activity_not_found', 'availability_stripepayment'),
              null,
              \core\output\notification::NOTIFY_ERROR);
 }
@@ -85,39 +85,45 @@ $course = $DB->get_record('course', ['id' => $payment->courseid]);
 
 $PAGE->set_url('/availability/condition/stripepayment/success.php', ['session_id' => $session_id]);
 $PAGE->set_context(context_course::instance($payment->courseid));
-$PAGE->set_title('Payment Successful');
+$PAGE->set_title(get_string('payment_successful_title', 'availability_stripepayment'));
 $PAGE->set_heading($course->fullname);
-$PAGE->requires->css(new moodle_url('/availability/condition/stripepayment/styles.css'));
 
 $redirect_url = new moodle_url('/mod/' . $cm->modname . '/view.php', ['id' => $cm->id]);
 
 echo $OUTPUT->header();
 
-echo $OUTPUT->notification('Payment successful! You now have access to this content.', 'success');
+echo $OUTPUT->notification(get_string('payment_success_notification', 'availability_stripepayment'), 'success');
 
-echo html_writer::start_div('payment-success-details');
-echo html_writer::tag('h3', 'Payment Details');
+echo html_writer::start_div('availability-stripepayment-success-details');
+echo html_writer::tag('h3', get_string('payment_details', 'availability_stripepayment'));
 echo html_writer::start_tag('ul');
-echo html_writer::tag('li', '<strong>Item:</strong> ' . s($cm->name));
-echo html_writer::tag('li', '<strong>Amount:</strong> ' . number_format($payment->amount, 2) . ' ' . s($payment->currency));
-echo html_writer::tag('li', '<strong>Payment ID:</strong> ' . s($session_id));
+echo html_writer::tag('li', '<strong>' . get_string('payment_detail_item', 'availability_stripepayment') . ':</strong> ' . s($cm->name));
+echo html_writer::tag('li', '<strong>' . get_string('payment_detail_amount', 'availability_stripepayment') . ':</strong> ' . number_format($payment->amount, 2) . ' ' . s($payment->currency));
+echo html_writer::tag('li', '<strong>' . get_string('payment_detail_id', 'availability_stripepayment') . ':</strong> ' . s($session_id));
 echo html_writer::end_tag('ul');
 echo html_writer::end_div();
 
 echo html_writer::div(
-    html_writer::link($redirect_url, 'Continue to ' . s($cm->name), ['class' => 'btn btn-primary btn-lg']),
-    'payment-continue-button'
+    html_writer::link($redirect_url, get_string('continue_to_activity', 'availability_stripepayment', s($cm->name)), ['class' => 'btn btn-primary btn-lg']),
+    'availability-stripepayment-continue-button'
 );
 
-echo html_writer::div('', 'payment-redirect-countdown', ['id' => 'stripe-countdown']);
+echo html_writer::div('', 'availability-stripepayment-redirect-countdown', ['id' => 'stripe-countdown']);
+
+$str_second  = get_string('second', 'availability_stripepayment');
+$str_seconds = get_string('seconds', 'availability_stripepayment');
+$str_redirecting_prefix = get_string('redirecting_prefix', 'availability_stripepayment');
 
 echo html_writer::script("
     var countdown = 5;
     var el = document.getElementById('stripe-countdown');
     var redirectUrl = " . json_encode($redirect_url->out(false)) . ";
+    var strSecond = " . json_encode($str_second) . ";
+    var strSeconds = " . json_encode($str_seconds) . ";
+    var strPrefix = " . json_encode($str_redirecting_prefix) . ";
 
     function updateCountdown() {
-        el.textContent = 'Automatically redirecting in ' + countdown + ' second' + (countdown !== 1 ? 's' : '') + '...';
+        el.textContent = strPrefix + ' ' + countdown + ' ' + (countdown !== 1 ? strSeconds : strSecond) + '...';
         if (countdown <= 0) {
             window.location.href = redirectUrl;
         } else {

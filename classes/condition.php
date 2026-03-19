@@ -1,8 +1,4 @@
 <?php
-namespace availability_stripepayment;
-
-defined('MOODLE_INTERNAL') || die();
-
 // This file is part of Moodle - https://moodle.org/
 //
 // Moodle is free software: you can redistribute it and/or modify
@@ -25,6 +21,11 @@ defined('MOODLE_INTERNAL') || die();
  * @copyright  2025 Andrei Toma <https://www.tagwebdesign.co.uk>
  * @license    https://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
  */
+
+namespace availability_stripepayment;
+
+defined('MOODLE_INTERNAL') || die();
+
 class condition extends \core_availability\condition {
     
     public $amount;

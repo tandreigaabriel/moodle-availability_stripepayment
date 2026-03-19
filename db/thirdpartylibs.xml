@@ -1,0 +1,10 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<libraries>
+    <library>
+        <name>stripe-php</name>
+        <location>vendor/stripe/stripe-php</location>
+        <version>10.x</version>
+        <license>MIT</license>
+        <licenseversion>2.0</licenseversion>
+    </library>
+</libraries>

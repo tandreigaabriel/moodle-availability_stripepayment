@@ -109,5 +109,15 @@ function xmldb_availability_stripepayment_upgrade($oldversion) {
         upgrade_plugin_savepoint(true, 2026031503, 'availability', 'stripepayment');
     }
 
+    if ($oldversion < 2026031900) {
+        // Compliance update: no schema changes, version bump only.
+        upgrade_plugin_savepoint(true, 2026031900, 'availability', 'stripepayment');
+    }
+
+    if ($oldversion < 2026031901) {
+        // Compliance update: no schema changes, version bump only.
+        upgrade_plugin_savepoint(true, 2026031901, 'availability', 'stripepayment');
+    }
+
     return true;
 }

@@ -46,7 +46,7 @@ $PAGE->set_pagelayout('incourse');
 $config = get_config('availability_stripepayment');
 if (empty($config->stripe_secret_key)) {
     redirect(new moodle_url('/course/view.php', ['id' => $cm->course]), 
-             'Stripe is not configured. Please contact administrator.', 
+             get_string('stripe_not_configured', 'availability_stripepayment'),
              null, 
              \core\output\notification::NOTIFY_ERROR);
 }
@@ -54,7 +54,7 @@ if (empty($config->stripe_secret_key)) {
 // Check if already paid
 if (availability_stripepayment_has_paid($USER->id, $cmid)) {
     redirect(new moodle_url('/course/view.php', ['id' => $cm->course]),
-             'You have already paid for this content.',
+             get_string('already_paid', 'availability_stripepayment'),
              null,
              \core\output\notification::NOTIFY_SUCCESS);
 }
@@ -88,7 +88,7 @@ $tree = $info->get_availability_tree();
 $stripe_condition = availability_stripepayment_find_condition($tree);
 if (!$stripe_condition) {
     redirect(new moodle_url('/course/view.php', ['id' => $cm->course]), 
-             'No Stripe payment condition found for this activity. Please contact administrator.', 
+             get_string('no_condition_found', 'availability_stripepayment'),
              null, 
              \core\output\notification::NOTIFY_ERROR);
 }
@@ -100,7 +100,7 @@ $itemname = $stripe_condition->itemname ?: $cm->name;
 // Validate amount
 if ($amount <= 0) {
     redirect(new moodle_url('/course/view.php', ['id' => $cm->course]),
-             'Invalid payment amount configured. Please contact administrator.',
+             get_string('invalid_amount_admin', 'availability_stripepayment'),
              null,
              \core\output\notification::NOTIFY_ERROR);
 }
@@ -108,7 +108,7 @@ if ($amount <= 0) {
 // Validate currency (basic 3-letter ISO check)
 if (!preg_match('/^[a-z]{3}$/', $currency)) {
     redirect(new moodle_url('/course/view.php', ['id' => $cm->course]),
-             'Invalid currency configured. Please contact administrator.',
+             get_string('invalid_currency_admin', 'availability_stripepayment'),
              null,
              \core\output\notification::NOTIFY_ERROR);
 }
@@ -158,21 +158,21 @@ try {
 } catch (\Stripe\Exception\CardException $e) {
     error_log('Stripe card error: ' . $e->getMessage());
     redirect(new moodle_url('/course/view.php', ['id' => $cm->course]), 
-             'Payment failed: Card declined', 
+             get_string('payment_failed_declined', 'availability_stripepayment'),
              null, 
              \core\output\notification::NOTIFY_ERROR);
              
 } catch (\Stripe\Exception\InvalidRequestException $e) {
     error_log('Stripe invalid request: ' . $e->getMessage());
     redirect(new moodle_url('/course/view.php', ['id' => $cm->course]), 
-             'Payment configuration error. Please contact support.', 
+             get_string('payment_config_error', 'availability_stripepayment'),
              null, 
              \core\output\notification::NOTIFY_ERROR);
              
 } catch (Exception $e) {
     error_log('Stripe general error: ' . $e->getMessage());
     redirect(new moodle_url('/course/view.php', ['id' => $cm->course]), 
-             'Payment failed. Please try again.', 
+             get_string('payment_failed', 'availability_stripepayment'),
              null, 
              \core\output\notification::NOTIFY_ERROR);
 }

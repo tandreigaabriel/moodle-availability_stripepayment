@@ -71,16 +71,15 @@ if ($hassiteconfig && isset($settings)) {
     $transactions_url = new moodle_url('/availability/condition/stripepayment/transactions.php');
     $settings->add(new admin_setting_description(
         'availability_stripepayment/transactions_link',
-        'Payment Transactions',
-        html_writer::link($transactions_url, 'View All Payment Transactions', ['class' => 'btn btn-primary']) .
-        '<br>View and manage all Stripe payment transactions.'
+        get_string('settings_transactions_heading', 'availability_stripepayment'),
+        html_writer::link($transactions_url, get_string('settings_transactions_link', 'availability_stripepayment'), ['class' => 'btn btn-primary'])
     ));
 }
 
 if ($hassiteconfig && isset($ADMIN)) {
     $ADMIN->add('reports', new admin_externalpage(
         'availability_stripepayment_transactions',
-        'Stripe Payment Transactions',
+        get_string('settings_transactions_admin', 'availability_stripepayment'),
         new moodle_url('/availability/condition/stripepayment/transactions.php'),
         'moodle/site:config'
     ));

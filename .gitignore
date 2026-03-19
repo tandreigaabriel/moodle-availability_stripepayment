@@ -6,7 +6,7 @@
 node_modules/
 npm-debug.log*
 grunt-debug.log*
-
+moodle_plugin_standards.txt
 # Composer lock (not needed because vendor is bundled)
 composer.lock
 # Ignore Stripe example README (contains test API keys triggering GitHub scan)

@@ -1,26 +1,44 @@
-/* =============================================================
-   Stripe Availability Condition — Plugin Styles
-   ============================================================= */
+/* This file is part of Moodle - https://moodle.org/
+ *
+ * Moodle is free software: you can redistribute it and/or modify
+ * it under the terms of the GNU General Public License as published by
+ * the Free Software Foundation, either version 3 of the License, or
+ * (at your option) any later version.
+ *
+ * Moodle is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU General Public License for more details.
+ *
+ * You should have received a copy of the GNU General Public License
+ * along with Moodle.  If not, see <https://www.gnu.org/licenses/>.
+ *
+ * Styles for availability_stripepayment.
+ *
+ * @package    availability_stripepayment
+ * @copyright  2025 Andrei Toma <https://www.tagwebdesign.co.uk>
+ * @license    https://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
+ */
 
 /* ---------------------------------------------------------------
    Payment prompt rendered inside the activity availability area
 --------------------------------------------------------------- */
-.availability-stripe-payment {
+.availability-stripepayment-payment {
     margin-top: 8px;
 }
 
-.availability-stripe-description {
+.availability-stripepayment-description {
     margin-bottom: 8px;
 }
 
-.availability-stripe-pay-btn {
+.availability-stripepayment-pay-btn {
     font-weight: 600;
 }
 
 /* ---------------------------------------------------------------
    Success page
 --------------------------------------------------------------- */
-.payment-success-details {
+.availability-stripepayment-success-details {
     background: #d4edda;
     border: 1px solid #c3e6cb;
     border-radius: 8px;
@@ -28,33 +46,33 @@
     margin: 20px 0;
 }
 
-.payment-success-details h3 {
+.availability-stripepayment-success-details h3 {
     color: #155724;
     margin-top: 0;
     margin-bottom: 15px;
 }
 
-.payment-success-details ul {
+.availability-stripepayment-success-details ul {
     list-style: none;
     padding: 0;
     margin: 0;
 }
 
-.payment-success-details li {
+.availability-stripepayment-success-details li {
     padding: 8px 0;
     border-bottom: 1px solid #c3e6cb;
 }
 
-.payment-success-details li:last-child {
+.availability-stripepayment-success-details li:last-child {
     border-bottom: none;
 }
 
-.payment-continue-button {
+.availability-stripepayment-continue-button {
     text-align: center;
     margin: 30px 0;
 }
 
-.payment-redirect-countdown {
+.availability-stripepayment-redirect-countdown {
     text-align: center;
     margin-top: 12px;
     color: #666;
