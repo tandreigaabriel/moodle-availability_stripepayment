@@ -124,7 +124,7 @@ try {
 
             http_response_code(200);
             echo json_encode([
-                'status' => 'ok',
+                'status' => get_string('status_ok', 'availability_stripepayment'),
                 'note' => get_string('payment_not_found', 'availability_stripepayment')
             ]);
             exit;
@@ -134,10 +134,12 @@ try {
         if ($payment->status === 'completed') {
 
             http_response_code(200);
-            echo json_encode(['status' => 'ok', 'note' => get_string('webhook_already_processed', 'availability_stripepayment')]);
+            echo json_encode([
+                'status' => get_string('status_ok', 'availability_stripepayment'),
+                'note' => get_string('webhook_already_processed', 'availability_stripepayment')
+            ]);
             exit;
         }
-
         // Update payment status
         $transaction = $DB->start_delegated_transaction();
 
@@ -185,8 +187,8 @@ try {
 // ------------------------------------------------------
 
 http_response_code(200);
-
 echo json_encode([
-    'status' => 'ok',
-    'event' => $event->type
+    'status' => get_string('status_ok', 'availability_stripepayment'),
+    'note' => get_string('webhook_already_processed', 'availability_stripepayment')
 ]);
+exit;

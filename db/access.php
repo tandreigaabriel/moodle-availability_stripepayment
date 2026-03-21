@@ -1,5 +1,5 @@
 <?php
-// This file is part of Moodle - https://moodle.org/
+// This file is part of Moodle - http://moodle.org/
 //
 // Moodle is free software: you can redistribute it and/or modify
 // it under the terms of the GNU General Public License as published by
@@ -18,8 +18,8 @@
  * Capability definitions for availability_stripepayment.
  *
  * @package    availability_stripepayment
- * @copyright  2025 Andrei Toma <https://www.tagwebdesign.co.uk>
- * @license    https://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
+ * @copyright  2026 Andrei Toma <https://www.tagwebdesign.co.uk>
+ * @license    http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
  */
 
 defined('MOODLE_INTERNAL') || die();

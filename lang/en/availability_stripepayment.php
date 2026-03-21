@@ -1,5 +1,5 @@
 <?php
-// This file is part of Moodle - https://moodle.org/
+// This file is part of Moodle - http://moodle.org/
 //
 // Moodle is free software: you can redistribute it and/or modify
 // it under the terms of the GNU General Public License as published by
@@ -13,7 +13,14 @@
 //
 // You should have received a copy of the GNU General Public License
 // along with Moodle.  If not, see <https://www.gnu.org/licenses/>.
-
+/**
+ * Language strings for availability_stripepayment.
+ *
+ * @package    availability_stripepayment
+ * @category   string
+ * @copyright  2026 Andrei Toma <https://www.tagwebdesign.co.uk>
+ * @license    http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
+ */
 defined('MOODLE_INTERNAL') || die();
 
 $string['pluginname'] = 'Stripe payment restriction';
@@ -34,7 +41,8 @@ $string['accounts_email_desc'] = 'Email address to receive internal payment noti
 $string['settings_transactions_heading'] = 'Payment Transactions';
 $string['settings_transactions_link'] = 'View all payment transactions';
 $string['settings_transactions_admin'] = 'Stripe payment transactions';
-
+$string['status_ok'] = 'ok';
+$string['dot'] = '.';
 // Condition configuration.
 $string['amount'] = 'Amount';
 $string['currency'] = 'Currency';
@@ -99,7 +107,8 @@ $string['downloadcsv'] = 'Download CSV';
 $string['allcourses'] = 'All courses';
 
 // Capability
-$string['availability_stripepayment:managetransactions'] = 'Manage Stripe payment transactions';
+
+$string['stripepayment:managetransactions'] = 'Manage Stripe payment transactions';
 
 // Misc.
 $string['unknownactivity'] = 'Unknown activity';

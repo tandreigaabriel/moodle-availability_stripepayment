@@ -5,14 +5,6 @@
 // it under the terms of the GNU General Public License as published by
 // the Free Software Foundation, either version 3 of the License, or
 // (at your option) any later version.
-//
-// Moodle is distributed in the hope that it will be useful,
-// but WITHOUT ANY WARRANTY; without even the implied warranty of
-// MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
-// GNU General Public License for more details.
-//
-// You should have received a copy of the GNU General Public License
-// along with Moodle.  If not, see <https://www.gnu.org/licenses/>.
 
 /**
  * Payment success page — verifies payment and redirects to the activity.
@@ -26,7 +18,7 @@ require_once('../../../config.php');
 require_once(__DIR__ . '/vendor/autoload.php');
 
 $session_id = required_param('session_id', PARAM_ALPHANUMEXT);
-$cmid       = optional_param('cmid', 0, PARAM_INT);
+$cmid = optional_param('cmid', 0, PARAM_INT);
 
 require_login();
 
@@ -34,26 +26,29 @@ global $DB, $USER;
 
 $payment = $DB->get_record('availability_stripepayment_payments', [
     'stripe_session_id' => $session_id,
-    'userid'            => $USER->id,
+    'userid' => $USER->id,
 ]);
 
 if (!$payment) {
-    redirect(new moodle_url('/my'),
-             get_string('payment_not_found', 'availability_stripepayment'),
-             null,
-             \core\output\notification::NOTIFY_ERROR);
+    redirect(
+        new moodle_url('/my'),
+        get_string('payment_not_found', 'availability_stripepayment'),
+        null,
+        \core\output\notification::NOTIFY_ERROR
+    );
 }
 
 $cm = get_coursemodule_from_id('', $payment->cmid);
 if (!$cm) {
-    redirect(new moodle_url('/course/view.php', ['id' => $payment->courseid]),
-             get_string('activity_not_found', 'availability_stripepayment'),
-             null,
-             \core\output\notification::NOTIFY_ERROR);
+    redirect(
+        new moodle_url('/course/view.php', ['id' => $payment->courseid]),
+        get_string('activity_not_found', 'availability_stripepayment'),
+        null,
+        \core\output\notification::NOTIFY_ERROR
+    );
 }
 
-// If the webhook hasn't fired yet, confirm payment directly with Stripe
-// and mark it complete immediately so the redirect works straight away.
+// Stripe verification fallback
 if ($payment->status !== 'completed') {
     $config = get_config('availability_stripepayment');
     if (!empty($config->stripe_secret_key)) {
@@ -62,21 +57,18 @@ if ($payment->status !== 'completed') {
             $stripe_session = \Stripe\Checkout\Session::retrieve($session_id);
 
             if ($stripe_session->payment_status === 'paid') {
-                $payment->status       = 'completed';
+                $payment->status = 'completed';
                 $payment->timemodified = time();
                 $DB->update_record('availability_stripepayment_payments', $payment);
 
-                // Clear the availability cache so access is granted on redirect.
                 try {
                     $cache = \cache::make('core', 'coursemodinfo');
                     $cache->delete($payment->courseid);
                 } catch (Exception $e) {
-                    // Non-critical — cache will expire naturally.
                 }
             }
         } catch (Exception $e) {
-            // Stripe verification failed — the webhook will handle it.
-            error_log('[availability_stripepayment] Success page Stripe verify error: ' . $e->getMessage());
+            error_log('[availability_stripepayment] Stripe verify error: ' . $e->getMessage());
         }
     }
 }
@@ -92,6 +84,9 @@ $redirect_url = new moodle_url('/mod/' . $cm->modname . '/view.php', ['id' => $c
 
 echo $OUTPUT->header();
 
+// ROOT WRAPPER (CSS FIX)
+echo html_writer::start_div('availability_stripepayment');
+
 echo $OUTPUT->notification(get_string('payment_success_notification', 'availability_stripepayment'), 'success');
 
 echo html_writer::start_div('availability-stripepayment-success-details');
@@ -104,15 +99,20 @@ echo html_writer::end_tag('ul');
 echo html_writer::end_div();
 
 echo html_writer::div(
-    html_writer::link($redirect_url, get_string('continue_to_activity', 'availability_stripepayment', s($cm->name)), ['class' => 'btn btn-primary btn-lg']),
+    html_writer::link(
+        $redirect_url,
+        get_string('continue_to_activity', 'availability_stripepayment', s($cm->name)),
+        ['class' => 'btn btn-primary btn-lg']
+    ),
     'availability-stripepayment-continue-button'
 );
 
 echo html_writer::div('', 'availability-stripepayment-redirect-countdown', ['id' => 'stripe-countdown']);
 
-$str_second  = get_string('second', 'availability_stripepayment');
+$str_second = get_string('second', 'availability_stripepayment');
 $str_seconds = get_string('seconds', 'availability_stripepayment');
-$str_redirecting_prefix = get_string('redirecting_prefix', 'availability_stripepayment');
+$str_prefix = get_string('redirecting_prefix', 'availability_stripepayment');
+$str_dot = get_string('dot', 'availability_stripepayment');
 
 echo html_writer::script("
     var countdown = 5;
@@ -120,10 +120,11 @@ echo html_writer::script("
     var redirectUrl = " . json_encode($redirect_url->out(false)) . ";
     var strSecond = " . json_encode($str_second) . ";
     var strSeconds = " . json_encode($str_seconds) . ";
-    var strPrefix = " . json_encode($str_redirecting_prefix) . ";
+    var strPrefix = " . json_encode($str_prefix) . ";
+    var strDot = " . json_encode($str_dot) . ";
 
     function updateCountdown() {
-        el.textContent = strPrefix + ' ' + countdown + ' ' + (countdown !== 1 ? strSeconds : strSecond) + '...';
+        el.textContent = strPrefix + ' ' + countdown + ' ' + (countdown !== 1 ? strSeconds : strSecond) + strDot;
         if (countdown <= 0) {
             window.location.href = redirectUrl;
         } else {
@@ -133,5 +134,8 @@ echo html_writer::script("
     }
     updateCountdown();
 ");
+
+// close wrapper
+echo html_writer::end_div();
 
 echo $OUTPUT->footer();

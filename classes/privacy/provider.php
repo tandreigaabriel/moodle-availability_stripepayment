@@ -1,26 +1,7 @@
 <?php
 // This file is part of Moodle - https://moodle.org/
 //
-// Moodle is free software: you can redistribute it and/or modify
-// it under the terms of the GNU General Public License as published by
-// the Free Software Foundation, either version 3 of the License, or
-// (at your option) any later version.
-//
-// Moodle is distributed in the hope that it will be useful,
-// but WITHOUT ANY WARRANTY; without even the implied warranty of
-// MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
-// GNU General Public License for more details.
-//
-// You should have received a copy of the GNU General Public License
-// along with Moodle.  If not, see <https://www.gnu.org/licenses/>.
-
-/**
- * Privacy provider for availability_stripepayment.
- *
- * @package    availability_stripepayment
- * @copyright  2025 Andrei Toma <https://www.tagwebdesign.co.uk>
- * @license    https://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
- */
+// Moodle is free software: you can redistribute it and/or modify...
 
 namespace availability_stripepayment\privacy;
 
@@ -32,33 +13,27 @@ use core_privacy\local\request\approved_userlist;
 use core_privacy\local\request\contextlist;
 use core_privacy\local\request\userlist;
 use core_privacy\local\request\writer;
+use core_privacy\local\request\transform;
 
-/**
- * Privacy provider implementation.
- */
 class provider implements
     \core_privacy\local\metadata\provider,
     \core_privacy\local\request\plugin\provider,
-    \core_privacy\local\request\core_userlist_provider {
+    \core_privacy\local\request\core_userlist_provider
+{
 
-    /**
-     * Returns metadata about stored user data.
-     *
-     * @param collection $collection
-     * @return collection
-     */
-    public static function get_metadata(collection $collection): collection {
+    public static function get_metadata(collection $collection): collection
+    {
         $collection->add_database_table(
             'availability_stripepayment_payments',
             [
-                'userid'            => 'privacy:metadata:payments:userid',
-                'courseid'          => 'privacy:metadata:payments:courseid',
-                'cmid'              => 'privacy:metadata:payments:cmid',
+                'userid' => 'privacy:metadata:payments:userid',
+                'courseid' => 'privacy:metadata:payments:courseid',
+                'cmid' => 'privacy:metadata:payments:cmid',
                 'stripe_session_id' => 'privacy:metadata:payments:sessionid',
-                'amount'            => 'privacy:metadata:payments:amount',
-                'currency'          => 'privacy:metadata:payments:currency',
-                'status'            => 'privacy:metadata:payments:status',
-                'timecreated'       => 'privacy:metadata:payments:timecreated',
+                'amount' => 'privacy:metadata:payments:amount',
+                'currency' => 'privacy:metadata:payments:currency',
+                'status' => 'privacy:metadata:payments:status',
+                'timecreated' => 'privacy:metadata:payments:timecreated',
             ],
             'privacy:metadata:payments'
         );
@@ -66,14 +41,10 @@ class provider implements
         return $collection;
     }
 
-    /**
-     * Returns all contexts that have data for the given user.
-     *
-     * @param int $userid
-     * @return contextlist
-     */
-    public static function get_contexts_for_userid(int $userid): contextlist {
+    public static function get_contexts_for_userid(int $userid): contextlist
+    {
         $contextlist = new contextlist();
+
         $contextlist->add_from_sql(
             "SELECT ctx.id
                FROM {context} ctx
@@ -82,19 +53,21 @@ class provider implements
               WHERE p.userid = :userid",
             ['contextlevel' => CONTEXT_MODULE, 'userid' => $userid]
         );
+
         return $contextlist;
     }
 
     /**
-     * Returns all users that have data in the given context.
-     *
-     * @param userlist $userlist
+     * REQUIRED FIX → added : void
      */
-    public static function get_users_in_context(userlist $userlist) {
+    public static function get_users_in_context(userlist $userlist): void
+    {
         $context = $userlist->get_context();
+
         if (!$context instanceof \context_module) {
             return;
         }
+
         $userlist->add_from_sql(
             'userid',
             "SELECT p.userid
@@ -104,15 +77,11 @@ class provider implements
         );
     }
 
-    /**
-     * Exports user data for the given approved contexts.
-     *
-     * @param approved_contextlist $contextlist
-     */
-    public static function export_user_data(approved_contextlist $contextlist) {
+    public static function export_user_data(approved_contextlist $contextlist): void
+    {
         global $DB;
 
-        if (empty($contextlist->count())) {
+        if ($contextlist->count() === 0) {
             return;
         }
 
@@ -122,82 +91,88 @@ class provider implements
             if (!$context instanceof \context_module) {
                 continue;
             }
+
             $payments = $DB->get_records('availability_stripepayment_payments', [
                 'userid' => $userid,
-                'cmid'   => $context->instanceid,
+                'cmid' => $context->instanceid,
             ]);
+
             if (!$payments) {
                 continue;
             }
-            $data = array_values(array_map(function($p) {
-                return [
-                    'courseid'          => $p->courseid,
-                    'cmid'              => $p->cmid,
+
+            $data = [];
+
+            foreach ($payments as $p) {
+                $data[] = (object) [
+                    'courseid' => $p->courseid,
+                    'cmid' => $p->cmid,
                     'stripe_session_id' => $p->stripe_session_id,
-                    'amount'            => $p->amount,
-                    'currency'          => $p->currency,
-                    'status'            => $p->status,
-                    'timecreated'       => \core_privacy\local\request\transform::datetime($p->timecreated),
+                    'amount' => $p->amount,
+                    'currency' => $p->currency,
+                    'status' => $p->status,
+                    'timecreated' => transform::datetime($p->timecreated),
                 ];
-            }, $payments));
+            }
+
             writer::with_context($context)->export_data(
                 [get_string('pluginname', 'availability_stripepayment')],
-                (object)['payments' => $data]
+                (object) ['payments' => $data]
             );
         }
     }
 
-    /**
-     * Deletes all data for all users in the given context.
-     *
-     * @param \context $context
-     */
-    public static function delete_data_for_all_users_in_context(\context $context) {
+    public static function delete_data_for_all_users_in_context(\context $context): void
+    {
         global $DB;
+
         if (!$context instanceof \context_module) {
             return;
         }
-        $DB->delete_records('availability_stripepayment_payments', ['cmid' => $context->instanceid]);
+
+        $DB->delete_records('availability_stripepayment_payments', [
+            'cmid' => $context->instanceid
+        ]);
     }
 
-    /**
-     * Deletes data for the given user in approved contexts.
-     *
-     * @param approved_contextlist $contextlist
-     */
-    public static function delete_data_for_user(approved_contextlist $contextlist) {
+    public static function delete_data_for_user(approved_contextlist $contextlist): void
+    {
         global $DB;
-        if (empty($contextlist->count())) {
+
+        if ($contextlist->count() === 0) {
             return;
         }
+
         $userid = $contextlist->get_user()->id;
+
         foreach ($contextlist->get_contexts() as $context) {
             if (!$context instanceof \context_module) {
                 continue;
             }
+
             $DB->delete_records('availability_stripepayment_payments', [
                 'userid' => $userid,
-                'cmid'   => $context->instanceid,
+                'cmid' => $context->instanceid,
             ]);
         }
     }
 
-    /**
-     * Deletes data for users in approved userlist.
-     *
-     * @param approved_userlist $userlist
-     */
-    public static function delete_data_for_users(approved_userlist $userlist) {
+    public static function delete_data_for_users(approved_userlist $userlist): void
+    {
         global $DB;
+
         $context = $userlist->get_context();
+
         if (!$context instanceof \context_module) {
             return;
         }
-        list($usersql, $userparams) = $DB->get_in_or_equal($userlist->get_userids(), SQL_PARAMS_NAMED);
+
+        list($usersql, $params) = $DB->get_in_or_equal($userlist->get_userids(), SQL_PARAMS_NAMED);
+
         $DB->delete_records_select(
             'availability_stripepayment_payments',
             "cmid = :cmid AND userid {$usersql}",
-            array_merge(['cmid' => $context->instanceid], $userparams)
+            array_merge(['cmid' => $context->instanceid], $params)
         );
     }
 }
