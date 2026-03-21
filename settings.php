@@ -24,8 +24,9 @@
 
 defined('MOODLE_INTERNAL') || die();
 
-if ($hassiteconfig && isset($settings)) {
+if ($hassiteconfig) {
 
+    // Enable
     $settings->add(new admin_setting_configcheckbox(
         'availability_stripepayment/enabled',
         get_string('enable', 'availability_stripepayment'),
@@ -33,6 +34,7 @@ if ($hassiteconfig && isset($settings)) {
         0
     ));
 
+    // Publishable key
     $settings->add(new admin_setting_configtext(
         'availability_stripepayment/stripe_publishable_key',
         get_string('stripe_publishable_key', 'availability_stripepayment'),
@@ -41,6 +43,7 @@ if ($hassiteconfig && isset($settings)) {
         PARAM_TEXT
     ));
 
+    // Secret key
     $settings->add(new admin_setting_configtext(
         'availability_stripepayment/stripe_secret_key',
         get_string('stripe_secret_key', 'availability_stripepayment'),
@@ -49,6 +52,7 @@ if ($hassiteconfig && isset($settings)) {
         PARAM_TEXT
     ));
 
+    // Webhook secret
     $settings->add(new admin_setting_configtext(
         'availability_stripepayment/webhook_secret',
         get_string('webhook_secret', 'availability_stripepayment'),
@@ -57,6 +61,7 @@ if ($hassiteconfig && isset($settings)) {
         PARAM_TEXT
     ));
 
+    // Accounts email
     $settings->add(new admin_setting_configtext(
         'availability_stripepayment/accounts_email',
         get_string('accounts_email', 'availability_stripepayment'),
@@ -65,6 +70,7 @@ if ($hassiteconfig && isset($settings)) {
         PARAM_EMAIL
     ));
 
+    // Transactions link
     $transactions_url = new moodle_url('/availability/condition/stripepayment/transactions.php');
 
     $settings->add(new admin_setting_description(
@@ -78,8 +84,8 @@ if ($hassiteconfig && isset($settings)) {
     ));
 }
 
-// Keep this part (correct)
-if ($hassiteconfig && isset($ADMIN)) {
+// External report page (this is fine)
+if ($hassiteconfig) {
     $ADMIN->add('reports', new admin_externalpage(
         'availability_stripepayment_transactions',
         get_string('settings_transactions_admin', 'availability_stripepayment'),
