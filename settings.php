@@ -24,7 +24,7 @@
 
 defined('MOODLE_INTERNAL') || die();
 
-if ($hassiteconfig) {
+if ($hassiteconfig && isset($settings)) {
 
     // Enable
     $settings->add(new admin_setting_configcheckbox(
@@ -84,8 +84,8 @@ if ($hassiteconfig) {
     ));
 }
 
-// External report page (this is fine)
-if ($hassiteconfig) {
+// 
+if ($hassiteconfig && isset($ADMIN)) {
     $ADMIN->add('reports', new admin_externalpage(
         'availability_stripepayment_transactions',
         get_string('settings_transactions_admin', 'availability_stripepayment'),
