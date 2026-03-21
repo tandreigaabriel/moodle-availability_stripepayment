@@ -24,7 +24,13 @@
 
 defined('MOODLE_INTERNAL') || die();
 
-if ($hassiteconfig && isset($settings)) {
+if ($hassiteconfig) {
+
+    // Create settings page
+    $settings = new admin_settingpage(
+        'availability_stripepayment',
+        get_string('pluginname', 'availability_stripepayment')
+    );
 
     // Enable
     $settings->add(new admin_setting_configcheckbox(
@@ -82,10 +88,13 @@ if ($hassiteconfig && isset($settings)) {
             ['class' => 'btn btn-primary']
         )
     ));
+
+    //THIS LINE WAS MISSING
+    $ADMIN->add('availabilitysettings', $settings);
 }
 
-// 
-if ($hassiteconfig && isset($ADMIN)) {
+// External report page
+if ($hassiteconfig) {
     $ADMIN->add('reports', new admin_externalpage(
         'availability_stripepayment_transactions',
         get_string('settings_transactions_admin', 'availability_stripepayment'),
