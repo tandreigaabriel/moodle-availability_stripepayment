@@ -78,8 +78,8 @@ if ($hassiteconfig && isset($settings)) {
     ));
 }
 
-// 
-if ($hassiteconfig) {
+// Keep this part (correct)
+if ($hassiteconfig && isset($ADMIN)) {
     $ADMIN->add('reports', new admin_externalpage(
         'availability_stripepayment_transactions',
         get_string('settings_transactions_admin', 'availability_stripepayment'),
