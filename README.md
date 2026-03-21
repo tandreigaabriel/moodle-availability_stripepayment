@@ -213,6 +213,19 @@ Stripe checkout sessions expire after 24 hours. The plugin's daily scheduled tas
 
 ---
 
+## Third-party libraries
+
+This plugin bundles the Stripe PHP SDK:
+
+- Library: Stripe PHP SDK
+- Version: 13.18.0
+- License: MIT License
+- Source: https://github.com/stripe/stripe-php
+
+The library is included in the `vendor/` directory.
+
+---
+
 ## Support & Donation
 
 Developed and maintained by **Andrei Toma** at [tagwebdesign.co.uk](https://www.tagwebdesign.co.uk).
@@ -233,6 +246,14 @@ Copyright &copy; 2025 Andrei Toma — [tagwebdesign.co.uk](https://www.tagwebdes
 ---
 
 ## Changelog
+
+### 1.3.2
+
+- Fixed Moodle plugin review issues
+- Implemented Privacy API provider
+- Fixed language strings
+- Improved CSS namespacing
+- Added third-party library documentation
 
 ### 1.2.0
 
