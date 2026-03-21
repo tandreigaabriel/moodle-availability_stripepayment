@@ -24,14 +24,8 @@
 
 defined('MOODLE_INTERNAL') || die();
 
-if ($hassiteconfig) {
+if ($hassiteconfig && isset($settings)) {
 
-    $settings = new admin_settingpage(
-        'availability_stripepayment',
-        get_string('pluginname', 'availability_stripepayment')
-    );
-
-    // Enable
     $settings->add(new admin_setting_configcheckbox(
         'availability_stripepayment/enabled',
         get_string('enable', 'availability_stripepayment'),
@@ -39,7 +33,6 @@ if ($hassiteconfig) {
         0
     ));
 
-    // Publishable key
     $settings->add(new admin_setting_configtext(
         'availability_stripepayment/stripe_publishable_key',
         get_string('stripe_publishable_key', 'availability_stripepayment'),
@@ -48,7 +41,6 @@ if ($hassiteconfig) {
         PARAM_TEXT
     ));
 
-    // Secret key
     $settings->add(new admin_setting_configtext(
         'availability_stripepayment/stripe_secret_key',
         get_string('stripe_secret_key', 'availability_stripepayment'),
@@ -57,7 +49,6 @@ if ($hassiteconfig) {
         PARAM_TEXT
     ));
 
-    // Webhook secret
     $settings->add(new admin_setting_configtext(
         'availability_stripepayment/webhook_secret',
         get_string('webhook_secret', 'availability_stripepayment'),
@@ -66,7 +57,6 @@ if ($hassiteconfig) {
         PARAM_TEXT
     ));
 
-    // Accounts email
     $settings->add(new admin_setting_configtext(
         'availability_stripepayment/accounts_email',
         get_string('accounts_email', 'availability_stripepayment'),
@@ -75,19 +65,20 @@ if ($hassiteconfig) {
         PARAM_EMAIL
     ));
 
-    // Transactions link
     $transactions_url = new moodle_url('/availability/condition/stripepayment/transactions.php');
+
     $settings->add(new admin_setting_description(
         'availability_stripepayment/transactions_link',
         get_string('settings_transactions_heading', 'availability_stripepayment'),
-        html_writer::link($transactions_url, get_string('settings_transactions_link', 'availability_stripepayment'), ['class' => 'btn btn-primary'])
+        html_writer::link(
+            $transactions_url,
+            get_string('settings_transactions_link', 'availability_stripepayment'),
+            ['class' => 'btn btn-primary']
+        )
     ));
-
-    // IMPORTANT: add settings page
-    $ADMIN->add('availabilitysettings', $settings);
 }
 
-// External report page
+// 
 if ($hassiteconfig) {
     $ADMIN->add('reports', new admin_externalpage(
         'availability_stripepayment_transactions',
