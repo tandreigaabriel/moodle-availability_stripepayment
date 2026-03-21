@@ -11,7 +11,7 @@ Restrict access to any Moodle activity or resource behind a Stripe payment. Stud
 - Stripe Checkout hosted page — no card data touches your server
 - Webhook-driven access grant — access is unlocked the moment payment completes
 - Payment button rendered inline on the course page — no JavaScript DOM injection
-- Payment notifications sent to your accounts team and site admins
+- Branded HTML email notifications sent to your accounts team and site admins
 - Admin dashboard with transaction history, per-currency revenue summary, and direct Stripe links
 - Per-activity payment report for teachers — no site-admin access required
 - Duplicate session prevention — a second click within 2 minutes is blocked server-side
@@ -123,14 +123,22 @@ Student is redirected to Stripe's hosted checkout page
        ↓
 Student enters card details on Stripe
        ↓
-Stripe sends checkout.session.completed to webhook.php
+Student is redirected to success.php
        ↓
-webhook.php marks payment as "completed" in the database
+success.php verifies payment status with Stripe API
        ↓
-Student is redirected to success.php then to the activity
+If paid → marks payment "completed" + sends email notifications
+       ↓
+(In parallel) Stripe sends checkout.session.completed to webhook.php
+       ↓
+webhook.php marks payment "completed" if not already done
+       ↓
+Student is auto-redirected to the activity
        ↓
 condition.php detects completed payment → access granted
 ```
+
+> **Note:** Email notifications are sent by `success.php` immediately after the student returns from Stripe. The webhook acts as a reliable fallback to complete the payment record if `success.php` is skipped for any reason.
 
 ---
 
@@ -246,6 +254,11 @@ Copyright &copy; 2025 Andrei Toma — [tagwebdesign.co.uk](https://www.tagwebdes
 ---
 
 ## Changelog
+
+### 1.3.3
+
+- Fixed accounts team and admin email notifications not being sent — `success.php` now sends notifications immediately when the student returns from Stripe, resolving a race condition where the webhook saw the payment already completed and skipped the notification step
+- Replaced plain-text HTML email bodies with branded Bootstrap-style HTML templates featuring a header band, styled details table, and action buttons
 
 ### 1.3.2
 

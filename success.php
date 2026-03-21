@@ -16,6 +16,7 @@
 
 require_once('../../../config.php');
 require_once(__DIR__ . '/vendor/autoload.php');
+require_once(__DIR__ . '/lib.php');
 
 $session_id = required_param('session_id', PARAM_ALPHANUMEXT);
 $cmid = optional_param('cmid', 0, PARAM_INT);
@@ -66,6 +67,8 @@ if ($payment->status !== 'completed') {
                     $cache->delete($payment->courseid);
                 } catch (Exception $e) {
                 }
+
+                availability_stripepayment_send_payment_notifications($payment, $stripe_session);
             }
         } catch (Exception $e) {
             error_log('[availability_stripepayment] Stripe verify error: ' . $e->getMessage());

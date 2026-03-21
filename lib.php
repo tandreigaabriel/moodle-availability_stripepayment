@@ -182,16 +182,21 @@ function availability_stripepayment_send_payment_notifications($payment, $sessio
         . "Date: " . userdate(time()) . "\n\n"
         . "Note: Customer receipt sent automatically by Stripe.";
 
-    $accounts_html = '<p><strong>New payment received via Stripe:</strong></p>'
-        . '<table>'
-        . '<tr><td><strong>Student:</strong></td><td>' . fullname($user) . ' (' . $user->email . ')</td></tr>'
-        . '<tr><td><strong>Activity:</strong></td><td>' . $cm->name . '</td></tr>'
-        . '<tr><td><strong>Course:</strong></td><td>' . $course->fullname . '</td></tr>'
-        . '<tr><td><strong>Amount:</strong></td><td>' . $amount_display . '</td></tr>'
-        . '<tr><td><strong>Payment ID:</strong></td><td>' . $session->id . '</td></tr>'
-        . '<tr><td><strong>Date:</strong></td><td>' . userdate(time()) . '</td></tr>'
-        . '</table>'
-        . '<p>Note: Customer receipt sent automatically by Stripe.</p>';
+    $rows = [
+        ['Student',    fullname($user) . ' (' . $user->email . ')'],
+        ['Activity',   $cm->name],
+        ['Course',     $course->fullname],
+        ['Amount',     $amount_display],
+        ['Payment ID', $session->id],
+        ['Date',       userdate(time())],
+    ];
+
+    $accounts_html = availability_stripepayment_email_html(
+        'New Payment Received',
+        '&#x2705; New payment received via Stripe.',
+        $rows,
+        '<p style="margin:0;color:#6c757d;font-size:13px;">Customer receipt has been sent automatically by Stripe.</p>'
+    );
 
     availability_stripepayment_send_email($accounts_email, $accounts_subject, $accounts_message, $accounts_html);
 
@@ -208,22 +213,128 @@ function availability_stripepayment_send_payment_notifications($payment, $sessio
             . "View student: {$CFG->wwwroot}/user/profile.php?id={$user->id}\n"
             . "View activity: {$CFG->wwwroot}/mod/{$cm->modname}/view.php?id={$cm->id}";
 
-        $admin_html = '<p><strong>A student has paid for activity access:</strong></p>'
-            . '<table>'
-            . '<tr><td><strong>Student:</strong></td><td>' . fullname($user) . ' (' . $user->email . ')</td></tr>'
-            . '<tr><td><strong>Activity:</strong></td><td>' . $cm->name . '</td></tr>'
-            . '<tr><td><strong>Course:</strong></td><td>' . $course->fullname . '</td></tr>'
-            . '<tr><td><strong>Amount:</strong></td><td>' . $amount_display . '</td></tr>'
-            . '<tr><td><strong>Payment ID:</strong></td><td>' . $session->id . '</td></tr>'
-            . '<tr><td><strong>Date:</strong></td><td>' . userdate(time()) . '</td></tr>'
-            . '</table>'
-            . '<p><a href="' . $CFG->wwwroot . '/user/profile.php?id=' . $user->id . '">View student profile</a> | '
-            . '<a href="' . $CFG->wwwroot . '/mod/' . $cm->modname . '/view.php?id=' . $cm->id . '">View activity</a></p>';
+        $links = '<a href="' . $CFG->wwwroot . '/user/profile.php?id=' . $user->id . '" '
+            . 'style="display:inline-block;padding:8px 16px;background:#0d6efd;color:#fff;text-decoration:none;border-radius:4px;font-size:13px;margin-right:8px;">'
+            . 'View Student</a>'
+            . '<a href="' . $CFG->wwwroot . '/mod/' . $cm->modname . '/view.php?id=' . $cm->id . '" '
+            . 'style="display:inline-block;padding:8px 16px;background:#6c757d;color:#fff;text-decoration:none;border-radius:4px;font-size:13px;">'
+            . 'View Activity</a>';
+
+        $admin_html = availability_stripepayment_email_html(
+            'Student Payment Notification',
+            '&#x1F4B3; A student has completed payment for activity access.',
+            $rows,
+            $links
+        );
 
         availability_stripepayment_send_email($admin->email, $admin_subject, $admin_message, $admin_html);
     }
 
     return true;
+}
+
+/**
+ * Build a branded HTML email using an inline-CSS Bootstrap-style layout.
+ *
+ * @param string $title    Heading shown in the email header band
+ * @param string $intro    Short intro sentence shown below the header
+ * @param array  $rows     Array of [label, value] pairs rendered as a details table
+ * @param string $footer   Optional HTML block rendered below the table (buttons, notes, etc.)
+ * @return string          Full HTML document ready for email_to_user()
+ */
+function availability_stripepayment_email_html($title, $intro, array $rows, $footer = '')
+{
+    global $CFG;
+
+    $site_name = format_string(get_site()->fullname);
+    $site_url  = $CFG->wwwroot;
+
+    // Table rows.
+    $rows_html = '';
+    foreach ($rows as [$label, $value]) {
+        $rows_html .= '
+            <tr>
+                <td style="padding:10px 16px;width:140px;color:#6c757d;font-size:13px;font-weight:600;white-space:nowrap;border-bottom:1px solid #f0f0f0;vertical-align:top;">'
+                    . htmlspecialchars($label, ENT_QUOTES) .
+                '</td>
+                <td style="padding:10px 16px;font-size:14px;color:#212529;border-bottom:1px solid #f0f0f0;word-break:break-word;">'
+                    . $value .
+                '</td>
+            </tr>';
+    }
+
+    return '<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width,initial-scale=1">
+  <title>' . htmlspecialchars($title, ENT_QUOTES) . '</title>
+</head>
+<body style="margin:0;padding:0;background:#f4f6f9;font-family:-apple-system,BlinkMacSystemFont,\'Segoe UI\',Roboto,\'Helvetica Neue\',Arial,sans-serif;">
+
+  <!-- Outer wrapper -->
+  <table role="presentation" width="100%" cellpadding="0" cellspacing="0" style="background:#f4f6f9;padding:32px 16px;">
+    <tr>
+      <td align="center">
+
+        <!-- Card -->
+        <table role="presentation" width="600" cellpadding="0" cellspacing="0"
+               style="max-width:600px;width:100%;background:#ffffff;border-radius:8px;overflow:hidden;box-shadow:0 2px 8px rgba(0,0,0,.08);">
+
+          <!-- Header band -->
+          <tr>
+            <td style="background:#0d6efd;padding:28px 32px;">
+              <p style="margin:0;font-size:20px;font-weight:700;color:#ffffff;letter-spacing:.3px;">'
+                . htmlspecialchars($site_name, ENT_QUOTES) .
+              '</p>
+              <p style="margin:6px 0 0;font-size:13px;color:rgba(255,255,255,.75);">Stripe Payment System</p>
+            </td>
+          </tr>
+
+          <!-- Intro -->
+          <tr>
+            <td style="padding:24px 32px 8px;">
+              <h2 style="margin:0 0 8px;font-size:18px;font-weight:600;color:#212529;">'
+                . htmlspecialchars($title, ENT_QUOTES) .
+              '</h2>
+              <p style="margin:0;font-size:14px;color:#495057;">' . $intro . '</p>
+            </td>
+          </tr>
+
+          <!-- Details table -->
+          <tr>
+            <td style="padding:16px 32px;">
+              <table role="presentation" width="100%" cellpadding="0" cellspacing="0"
+                     style="border:1px solid #e9ecef;border-radius:6px;overflow:hidden;">
+                ' . $rows_html . '
+              </table>
+            </td>
+          </tr>
+
+          <!-- Footer content (buttons / notes) -->
+          ' . ($footer ? '<tr><td style="padding:8px 32px 24px;">' . $footer . '</td></tr>' : '') . '
+
+          <!-- Bottom bar -->
+          <tr>
+            <td style="background:#f8f9fa;padding:16px 32px;border-top:1px solid #e9ecef;">
+              <p style="margin:0;font-size:12px;color:#adb5bd;text-align:center;">
+                This is an automated notification from
+                <a href="' . $site_url . '" style="color:#0d6efd;text-decoration:none;">'
+                  . htmlspecialchars($site_name, ENT_QUOTES) .
+                '</a>. Please do not reply to this email.
+              </p>
+            </td>
+          </tr>
+
+        </table>
+        <!-- /Card -->
+
+      </td>
+    </tr>
+  </table>
+
+</body>
+</html>';
 }
 
 /**
