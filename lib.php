@@ -32,9 +32,12 @@ defined('MOODLE_INTERNAL') || die();
  * @param stdClass        $course
  * @param context         $context     Course context
  */
-function availability_stripepayment_extend_navigation_course($navigation, $course, $context) {
-    if (!has_capability('availability/stripepayment:managetransactions', $context) &&
-        !has_capability('moodle/course:manageactivities', $context)) {
+function availability_stripepayment_extend_navigation_course($navigation, $course, $context)
+{
+    if (
+        !has_capability('availability/stripepayment:managetransactions', $context) &&
+        !has_capability('moodle/course:manageactivities', $context)
+    ) {
         return;
     }
 
@@ -56,11 +59,12 @@ function availability_stripepayment_extend_navigation_course($navigation, $cours
  * @param int $cmid
  * @return bool
  */
-function availability_stripepayment_has_paid($userid, $cmid) {
+function availability_stripepayment_has_paid($userid, $cmid)
+{
     global $DB;
     return $DB->record_exists('availability_stripepayment_payments', [
         'userid' => $userid,
-        'cmid'   => $cmid,
+        'cmid' => $cmid,
         'status' => 'completed',
     ]);
 }
@@ -71,7 +75,8 @@ function availability_stripepayment_has_paid($userid, $cmid) {
  * @param mixed $tree
  * @return \availability_stripepayment\condition|null
  */
-function availability_stripepayment_find_condition($tree) {
+function availability_stripepayment_find_condition($tree)
+{
     if (!$tree) {
         return null;
     }
@@ -122,19 +127,20 @@ function availability_stripepayment_find_condition($tree) {
  * @param string $currency    ISO 4217 currency code (uppercase)
  * @return int  New record ID
  */
-function availability_stripepayment_create_payment($userid, $cmid, $courseid, $session_id, $amount, $currency) {
+function availability_stripepayment_create_payment($userid, $cmid, $courseid, $session_id, $amount, $currency)
+{
     global $DB;
 
     $payment = new stdClass();
-    $payment->userid           = $userid;
-    $payment->cmid             = $cmid;
-    $payment->courseid         = $courseid;
+    $payment->userid = $userid;
+    $payment->cmid = $cmid;
+    $payment->courseid = $courseid;
     $payment->stripe_session_id = $session_id;
-    $payment->amount           = $amount;
-    $payment->currency         = $currency;
-    $payment->status           = 'pending';
-    $payment->timecreated      = time();
-    $payment->timemodified     = time();
+    $payment->amount = $amount;
+    $payment->currency = $currency;
+    $payment->status = 'pending';
+    $payment->timecreated = time();
+    $payment->timemodified = time();
 
     return $DB->insert_record('availability_stripepayment_payments', $payment);
 }
@@ -147,11 +153,12 @@ function availability_stripepayment_create_payment($userid, $cmid, $courseid, $s
  * @param object   $session  Stripe Checkout Session object
  * @return bool
  */
-function availability_stripepayment_send_payment_notifications($payment, $session) {
+function availability_stripepayment_send_payment_notifications($payment, $session)
+{
     global $DB, $CFG;
 
-    $user   = $DB->get_record('user', ['id' => $payment->userid]);
-    $cm     = get_coursemodule_from_id('', $payment->cmid);
+    $user = $DB->get_record('user', ['id' => $payment->userid]);
+    $cm = get_coursemodule_from_id('', $payment->cmid);
     $course = $DB->get_record('course', ['id' => $payment->courseid]);
 
     if (!$user || !$cm || !$course) {
@@ -190,8 +197,8 @@ function availability_stripepayment_send_payment_notifications($payment, $sessio
 
     // Notification to site admins.
     foreach (get_admins() as $admin) {
-        $admin_subject  = 'Student Payment - ' . $cm->name;
-        $admin_message  = "A student has paid for activity access:\n\n"
+        $admin_subject = 'Student Payment - ' . $cm->name;
+        $admin_message = "A student has paid for activity access:\n\n"
             . "Student: {$user->firstname} {$user->lastname} ({$user->email})\n"
             . "Activity: {$cm->name}\n"
             . "Course: {$course->fullname}\n"
@@ -228,38 +235,42 @@ function availability_stripepayment_send_payment_notifications($payment, $sessio
  * @param string|null $html_message HTML body (optional)
  * @return bool
  */
-function availability_stripepayment_send_email($to, $subject, $message, $html_message = null) {
+function availability_stripepayment_send_email($to, $subject, $message, $html_message = null)
+{
     global $CFG;
 
-    $from    = get_admin();
+    $from = get_admin();
     $to_user = core_user::get_user_by_email($to);
 
     if (!$to_user) {
         // Build a clean synthetic user object that email_to_user() will accept.
         // Do NOT use get_noreply_user() as a base — it may carry emailstop=1, a
         // restrictive auth type, or other fields that silently block delivery.
-        $to_user                    = new stdClass();
-        $to_user->id                = -99;
-        $to_user->email             = $to;
-        $to_user->firstname         = 'Accounts';
-        $to_user->lastname          = '';
+        $to_user = new stdClass();
+        $to_user->id = -99;
+        $to_user->email = $to;
+        $to_user->firstname = 'Accounts';
+        $to_user->lastname = '';
         $to_user->firstnamephonetic = '';
-        $to_user->lastnamephonetic  = '';
-        $to_user->middlename        = '';
-        $to_user->alternatename     = '';
-        $to_user->username          = 'availability_stripepayment_notify';
-        $to_user->auth              = 'manual';
-        $to_user->confirmed         = 1;
-        $to_user->deleted           = 0;
-        $to_user->suspended         = 0;
-        $to_user->emailstop         = 0;
-        $to_user->maildisplay       = 0;
-        $to_user->mailformat        = 1;
-        $to_user->lang              = $CFG->lang ?? 'en';
-        $to_user->timezone          = 99;
-        $to_user->mnethostid        = $CFG->mnet_localhost_id ?? 1;
+        $to_user->lastnamephonetic = '';
+        $to_user->middlename = '';
+        $to_user->alternatename = '';
+        $to_user->username = 'availability_stripepayment_notify';
+        $to_user->auth = 'manual';
+        $to_user->confirmed = 1;
+        $to_user->deleted = 0;
+        $to_user->suspended = 0;
+        $to_user->emailstop = 0;
+        $to_user->maildisplay = 0;
+        $to_user->mailformat = 1;
+        $to_user->lang = $CFG->lang ?? 'en';
+        $to_user->timezone = 99;
+        $to_user->mnethostid = $CFG->mnet_localhost_id ?? 1;
     } else {
         $to_user->mailformat = 1;
+        $to_user->emailstop = 0;
+        $to_user->suspended = 0;
+        $to_user->deleted = 0;
     }
 
     $result = email_to_user($to_user, $from, $subject, $message, $html_message);
