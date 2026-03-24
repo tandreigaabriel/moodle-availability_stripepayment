@@ -57,7 +57,6 @@ M.availability_stripepayment.form.getNode = function(json) {
     }
 
     var html = '<div class="container-fluid">';
-    
     html += '<div class="row mt-3">';
     html += '<div class="col"><label for="stripecurrency">';
     html += M.util.get_string('currency', 'availability_stripepayment');
@@ -72,7 +71,8 @@ M.availability_stripepayment.form.getNode = function(json) {
     html += '<div class="row mt-3">';
     html += '<div class="col"><label for="stripeitemname">';
     html += M.util.get_string('itemname', 'availability_stripepayment');
-    html += '</label></div><div class="col"><input class="form-control" name="itemname" type="text" id="stripeitemname" /></div></div>';
+    html += '</label></div><div class="col"><input class="form-control" name="itemname"' +
+            ' type="text" id="stripeitemname" /></div></div>';
     html += '</div>';
 
     var node = Y.Node.create('<span>' + html + '</span>');

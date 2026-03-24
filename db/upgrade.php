@@ -28,14 +28,17 @@ function xmldb_availability_stripepayment_upgrade($oldversion)
 
     if ($oldversion < 2025061703) {
         availability_stripepayment_upgrade_2025061703($dbman);
+        upgrade_plugin_savepoint(true, 2025061703, 'availability', 'stripepayment');
     }
 
     if ($oldversion < 2026031501) {
         availability_stripepayment_upgrade_2026031501($DB);
+        upgrade_plugin_savepoint(true, 2026031501, 'availability', 'stripepayment');
     }
 
     if ($oldversion < 2026031503) {
         availability_stripepayment_upgrade_2026031503();
+        upgrade_plugin_savepoint(true, 2026031503, 'availability', 'stripepayment');
     }
 
     if ($oldversion < 2026031900) {
@@ -83,8 +86,6 @@ function availability_stripepayment_upgrade_2025061703($dbman)
     if (!$dbman->index_exists($table, $index)) {
         $dbman->add_index($table, $index);
     }
-
-    upgrade_plugin_savepoint(true, 2025061703, 'availability', 'stripepayment');
 }
 
 /**
@@ -116,8 +117,6 @@ function availability_stripepayment_upgrade_2026031501($DB)
             ]
         );
     }
-
-    upgrade_plugin_savepoint(true, 2026031501, 'availability', 'stripepayment');
 }
 
 /**
@@ -149,6 +148,4 @@ function availability_stripepayment_upgrade_2026031503()
             }
         }
     }
-
-    upgrade_plugin_savepoint(true, 2026031503, 'availability', 'stripepayment');
 }
