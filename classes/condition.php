@@ -18,15 +18,25 @@ namespace availability_stripepayment;
 
 defined('MOODLE_INTERNAL') || die();
 
+/**
+ * Stripe payment availability condition.
+ */
 class condition extends \core_availability\condition
 {
 
+    /** @var float|null Payment amount required. */
     public $amount;
+
+    /** @var string|null ISO 4217 currency code. */
     public $currency;
+
+    /** @var string|null Display name for the payment item. */
     public $itemname;
 
     /**
-     * Constructor
+     * Constructor.
+     *
+     * @param \stdClass $structure Saved condition data from the database.
      */
     public function __construct($structure)
     {
@@ -42,7 +52,9 @@ class condition extends \core_availability\condition
     }
 
     /**
-     * Saves tree data back to a structure object
+     * Saves tree data back to a structure object.
+     *
+     * @return \stdClass JSON-encodable condition data.
      */
     public function save()
     {
@@ -60,7 +72,12 @@ class condition extends \core_availability\condition
     }
 
     /**
-     * Returns a JSON object which corresponds to a condition of this type
+     * Returns a JSON object which corresponds to a condition of this type.
+     *
+     * @param float  $amount   Payment amount.
+     * @param string $currency ISO 4217 currency code.
+     * @param string $itemname Display name for the payment item.
+     * @return \stdClass Condition data object.
      */
     public static function get_json($amount, $currency, $itemname)
     {
@@ -73,7 +90,13 @@ class condition extends \core_availability\condition
     }
 
     /**
-     * Determines whether a particular item is currently available
+     * Determines whether a particular item is currently available.
+     *
+     * @param bool                    $not        Set true if we are inverting the condition.
+     * @param \core_availability\info $info       Item we're checking.
+     * @param bool                    $grabthelot Performance hint: not used by this condition.
+     * @param int                     $userid     User ID to check availability for.
+     * @return bool True if access is permitted under this condition.
      */
     public function is_available($not, \core_availability\info $info, $grabthelot, $userid)
     {
@@ -100,13 +123,26 @@ class condition extends \core_availability\condition
     }
 
     /**
-     * Obtains a string describing this restriction
+     * Obtains a string describing this restriction.
+     *
+     * @param bool                    $full Set true if this is the 'full information' view.
+     * @param bool                    $not  Set true if we are inverting the condition.
+     * @param \core_availability\info $info Item we're checking.
+     * @return string Description of the restriction.
      */
     public function get_description($full, $not, \core_availability\info $info)
     {
         return $this->get_either_description($not, !$full, $info);
     }
 
+    /**
+     * Returns the availability description for both full and standalone views.
+     *
+     * @param bool                    $not        Set true if we are inverting the condition.
+     * @param bool                    $standalone True when rendered outside a full info block.
+     * @param \core_availability\info $info       Item we're checking.
+     * @return string HTML or plain-text description string.
+     */
     protected function get_either_description($not, $standalone, $info)
     {
         global $USER, $DB, $OUTPUT, $PAGE;
@@ -184,7 +220,9 @@ class condition extends \core_availability\condition
     }
 
     /**
-     * Format amount for display
+     * Format amount for display.
+     *
+     * @return string Formatted amount string with currency symbol.
      */
     private function format_amount_for_display()
     {
@@ -230,7 +268,9 @@ class condition extends \core_availability\condition
     }
 
     /**
-     * Debug string
+     * Debug string.
+     *
+     * @return string Short debug description.
      */
     protected function get_debug_string()
     {

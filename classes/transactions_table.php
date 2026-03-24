@@ -85,6 +85,9 @@ class transactions_table extends \table_sql
     /**
      * Resolve the activity instance name directly from the module table.
      * Uses modname_raw (e.g. "assign") + cm_instance to do a single targeted lookup.
+     *
+     * @param object $data Row data from the report query.
+     * @return string Activity name, or localised "unknown activity" string.
      */
     private function get_activity_name($data): string
     {
@@ -107,7 +110,8 @@ class transactions_table extends \table_sql
     /**
      * Format the activity name with course context.
      *
-     * @param object $data
+     * @param object $data Row data.
+     * @return string Formatted cell content.
      */
     public function col_item($data)
     {
@@ -139,7 +143,8 @@ class transactions_table extends \table_sql
     /**
      * Format the user name with profile link.
      *
-     * @param object $data
+     * @param object $data Row data.
+     * @return string Formatted cell content.
      */
     public function col_fullname($data)
     {
@@ -163,7 +168,8 @@ class transactions_table extends \table_sql
     /**
      * Format the payment amount.
      *
-     * @param object $data
+     * @param object $data Row data.
+     * @return string Formatted amount.
      */
     public function col_amount($data)
     {
@@ -175,7 +181,8 @@ class transactions_table extends \table_sql
     /**
      * Format the currency.
      *
-     * @param object $data
+     * @param object $data Row data.
+     * @return string Uppercase currency code.
      */
     public function col_currency($data)
     {
@@ -185,7 +192,8 @@ class transactions_table extends \table_sql
     /**
      * Format the payment status with badges (HTML) or plain text (download).
      *
-     * @param object $data
+     * @param object $data Row data.
+     * @return string Formatted status badge or plain text.
      */
     public function col_status($data)
     {
@@ -214,7 +222,8 @@ class transactions_table extends \table_sql
      * Format the Stripe session ID.
      * Downloads get the full ID; screen gets a shortened, copyable version.
      *
-     * @param object $data
+     * @param object $data Row data.
+     * @return string Formatted session ID or dash if empty.
      */
     public function col_stripe_session_id($data)
     {
@@ -241,7 +250,8 @@ class transactions_table extends \table_sql
     /**
      * Format the time.
      *
-     * @param object $data
+     * @param object $data Row data.
+     * @return string Formatted date/time string.
      */
     public function col_timecreated($data)
     {
@@ -251,7 +261,8 @@ class transactions_table extends \table_sql
     /**
      * Stripe dashboard link (screen only; plain URL for downloads).
      *
-     * @param object $data
+     * @param object $data Row data.
+     * @return string Link HTML or plain URL string.
      */
     public function col_stripe_link($data)
     {
@@ -285,6 +296,8 @@ class transactions_table extends \table_sql
 
     /**
      * Override to add summary cards above the table.
+     *
+     * @return void
      */
     public function start_output()
     {
