@@ -96,7 +96,7 @@ class condition extends \core_availability\condition
      * @param int $userid
      * @return bool
      */
-    public function is_available(bool $not, \core_availability\info $info, bool $grabthelot, int $userid): bool
+    public function is_available($not, \core_availability\info $info, $grabthelot, $userid): bool
     {
         global $DB;
 
