@@ -1,79 +1,93 @@
 name: Moodle Plugin CI
 
-on:
-  push:
-    branches: [main]
-  pull_request:
-    branches: [main]
+on: [push, pull_request]
 
 jobs:
   test:
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-22.04
 
     services:
       postgres:
-        image: postgres:13
+        image: postgres:15
         env:
           POSTGRES_USER: postgres
-          POSTGRES_PASSWORD: postgres
-          POSTGRES_DB: moodle
+          POSTGRES_HOST_AUTH_METHOD: trust
         ports:
           - 5432:5432
-        options: >-
-          --health-cmd pg_isready
-          --health-interval 10s
-          --health-timeout 5s
-          --health-retries 3
+        options: --health-cmd pg_isready --health-interval 10s --health-timeout 5s --health-retries 3
 
     strategy:
+      fail-fast: false
       matrix:
-        php-version: ["8.1"]
+        php: ["8.1"]
         moodle-branch: ["MOODLE_405_STABLE"]
+        database: [pgsql]
 
     steps:
-      - name: Check out plugin
+      - name: Check out repository code
         uses: actions/checkout@v4
         with:
           path: plugin
 
-      - name: Set up PHP
+      - name: Setup PHP ${{ matrix.php }}
         uses: shivammathur/setup-php@v2
         with:
-          php-version: ${{ matrix.php-version }}
-          extensions: pgsql, zip, gd, curl, xmlrpc, soap, intl, xml
+          php-version: ${{ matrix.php }}
+          extensions: pgsql, zip, gd, curl, intl, xml
           tools: composer
           coverage: none
 
-      - name: Install Moodle plugin CI
+      - name: Initialise moodle-plugin-ci
         run: |
-          composer create-project moodlehq/moodle-plugin-ci ci --no-dev --prefer-dist
+          composer create-project -n --no-dev --prefer-dist moodlehq/moodle-plugin-ci ci ^4
+          echo "$GITHUB_WORKSPACE/ci/bin" >> $GITHUB_PATH
+          echo "$GITHUB_WORKSPACE/ci/vendor/bin" >> $GITHUB_PATH
 
-      - name: Debug (check CI installed)
+      - name: Debug CI install (IMPORTANT FIRST RUN)
         run: |
           ls -la
           ls -la ci
           ls -la ci/bin
 
-      - name: Install Moodle
-        run: |
-          ci/bin/moodle-plugin-ci install \
-            --plugin ./plugin \
-            --db-host 127.0.0.1 \
-            --db-type pgsql \
-            --db-user postgres \
-            --db-pass postgres \
-            --db-name moodle \
-            --moodle-branch ${{ matrix.moodle-branch }}
+      - name: Install moodle-plugin-ci
+        run: moodle-plugin-ci install --plugin ./plugin --db-host=127.0.0.1
+        env:
+          DB: ${{ matrix.database }}
+          MOODLE_BRANCH: ${{ matrix.moodle-branch }}
 
-      - name: Run checks
-        if: always()
-        run: |
-          ci/bin/moodle-plugin-ci phplint
-          ci/bin/moodle-plugin-ci phpcpd
-          ci/bin/moodle-plugin-ci phpmd
-          ci/bin/moodle-plugin-ci codechecker
-          ci/bin/moodle-plugin-ci phpdoc
-          ci/bin/moodle-plugin-ci validate
-          ci/bin/moodle-plugin-ci savepoints
-          ci/bin/moodle-plugin-ci mustache
-          ci/bin/moodle-plugin-ci grunt
+      - name: PHP Lint
+        if: ${{ !cancelled() }}
+        run: moodle-plugin-ci phplint
+
+      - name: PHP Mess Detector
+        continue-on-error: true
+        if: ${{ !cancelled() }}
+        run: moodle-plugin-ci phpmd
+
+      - name: Moodle Code Checker
+        if: ${{ !cancelled() }}
+        run: moodle-plugin-ci phpcs --max-warnings 0
+
+      - name: Moodle PHPDoc Checker
+        if: ${{ !cancelled() }}
+        run: moodle-plugin-ci phpdoc --max-warnings 0
+
+      - name: Validating
+        if: ${{ !cancelled() }}
+        run: moodle-plugin-ci validate
+
+      - name: Check upgrade savepoints
+        if: ${{ !cancelled() }}
+        run: moodle-plugin-ci savepoints
+
+      - name: Mustache Lint
+        if: ${{ !cancelled() }}
+        run: moodle-plugin-ci mustache
+
+      - name: Grunt
+        if: ${{ !cancelled() }}
+        run: moodle-plugin-ci grunt --max-lint-warnings 0
+
+      - name: PHPUnit tests
+        if: ${{ !cancelled() }}
+        run: moodle-plugin-ci phpunit --fail-on-warning
