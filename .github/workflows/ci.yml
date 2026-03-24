@@ -57,11 +57,11 @@ jobs:
         run: moodle-plugin-ci phpmd
 
       - name: Moodle Code Checker
-        run: moodle-plugin-ci phpcs --standard=availability/condition/stripepayment/ruleset.xml --max-warnings=0
+        run: moodle-plugin-ci phpcs --max-warnings=0
 
       - name: Moodle PHPDoc Checker
         continue-on-error: true
-        run: moodle-plugin-ci phpdoc --standard=availability/condition/stripepayment/ruleset.xml
+        run: moodle-plugin-ci phpdoc
 
       - name: Validate
         run: moodle-plugin-ci validate
