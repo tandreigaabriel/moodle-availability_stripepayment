@@ -123,7 +123,7 @@ class condition extends \core_availability\condition
      * @param \core_availability\info $info
      * @return string
      */
-    public function get_description(bool $full, bool $not, \core_availability\info $info): string
+    public function get_description($full, $not, \core_availability\info $info): string
     {
         return $this->get_either_description($not, !$full, $info);
     }
