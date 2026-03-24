@@ -304,7 +304,7 @@ class transactions_table extends \table_sql
 
         $zero_decimal = ['BIF', 'CLP', 'DJF', 'GNF', 'JPY', 'KMF', 'KRW', 'MGA', 'PYG', 'RWF', 'UGX', 'VND', 'VUV', 'XAF', 'XOF', 'XPF'];
 
-        // ── Row 1: three metric cards (always equal thirds) ──────────────────
+        // Row 1: three metric cards (always equal thirds).
         echo \html_writer::start_div('row g-3 mb-3');
 
         // Total payments card.
@@ -339,7 +339,7 @@ class transactions_table extends \table_sql
 
         echo \html_writer::end_div(); // row 1
 
-        // ── Row 2: single "Revenue by currency" card ─────────────────────────
+        // Row 2: single "Revenue by currency" card.
         echo \html_writer::start_div('row g-3 mb-4');
         echo \html_writer::start_div('col-12');
         echo \html_writer::start_div('card border-warning');

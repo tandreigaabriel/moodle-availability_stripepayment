@@ -29,15 +29,6 @@ defined('MOODLE_INTERNAL') || die();
 class frontend extends \core_availability\frontend {
 
     /**
-     * Return list of string indexes used by javascript.
-     *
-     * @return array
-     */
-    protected function get_javascript_strings() {
-        return ['currency', 'amount', 'itemname'];
-    }
-
-    /**
      * Return true always — any teacher/admin can add this condition.
      *
      * @param stdClass $course
@@ -50,15 +41,21 @@ class frontend extends \core_availability\frontend {
     }
 
     /**
-     * Gets additional parameters for the plugin's initInner function.
+     * Load the AMD form module instead of the legacy YUI module.
      *
-     * @param \stdClass $course Course object
-     * @param \cm_info $cm Course-module currently being edited (null if none)
-     * @param \section_info $section Section currently being edited (null if none)
-     * @return array Array of parameters for the JavaScript function
+     * Overrides \core_availability\frontend::include_javascript() to use
+     * availability_stripepayment/form (amd/src/form.js) so that the plugin
+     * does not depend on YUI.
+     *
+     * @param \stdClass       $course
+     * @param \cm_info|null   $cm
+     * @param \section_info|null $section
      */
-    protected function get_javascript_init_params($course, \cm_info $cm = null, \section_info $section = null) {
+    public function include_javascript($course, \cm_info $cm = null, \section_info $section = null) {
+        global $PAGE;
+
         $currencies = \get_string_manager()->get_list_of_currencies();
-        return [$currencies];
+        $PAGE->requires->strings_for_js(['currency', 'amount', 'itemname'], 'availability_stripepayment');
+        $PAGE->requires->js_call_amd('availability_stripepayment/form', 'init', [$currencies]);
     }
 }

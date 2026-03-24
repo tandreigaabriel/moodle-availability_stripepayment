@@ -22,7 +22,10 @@
  * @license    https://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
  */
 
-// MUST be defined before config.php loads.
+// These are Moodle core bootstrap constants that MUST be defined before
+// config.php is included. They are not plugin-defined constants and therefore
+// intentionally do not follow the availability_stripepayment_ prefix convention.
+// See: https://moodledev.io/docs/apis/subsystems/output#page-setup
 define('NO_MOODLE_COOKIES', true);
 define('NO_DEBUG_DISPLAY', true);
 define('NO_UPGRADE_CHECK', true);
@@ -137,7 +140,11 @@ try {
             ]);
             exit;
         }
-        // Update payment status
+        // Authorization note: this endpoint has no Moodle user session.
+        // Access control is enforced by \Stripe\Webhook::constructEvent() above,
+        // which cryptographically verifies the Stripe-Signature header using the
+        // configured webhook secret. Only Stripe's servers can produce a valid
+        // signature, so no additional Moodle capability check is required here.
         $transaction = $DB->start_delegated_transaction();
 
         $payment->status = 'completed';

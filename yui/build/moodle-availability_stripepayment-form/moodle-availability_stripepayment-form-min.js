@@ -1,1 +1,18 @@
+// This file is part of Moodle - https://moodle.org/
+//
+// Moodle is free software: you can redistribute it and/or modify
+// it under the terms of the GNU General Public License as published by
+// the Free Software Foundation, either version 3 of the License, or
+// (at your option) any later version.
+//
+// Moodle is distributed in the hope that it will be useful,
+// but WITHOUT ANY WARRANTY; without even the implied warranty of
+// MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+// GNU General Public License for more details.
+//
+// You should have received a copy of the GNU General Public License
+// along with Moodle.  If not, see <https://www.gnu.org/licenses/>.
+// Legacy YUI build (minified) — superseded by amd/src/form.js.
+// @copyright 2025 Andrei Toma <https://www.tagwebdesign.co.uk>
+// @license   https://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
 YUI.add('moodle-availability_stripepayment-form',function(Y,NAME){M.availability_stripepayment=M.availability_stripepayment||{};M.availability_stripepayment.form=Y.Object(M.core_availability.plugin);M.availability_stripepayment.form.initInner=function(c){this.currencies=c;};M.availability_stripepayment.form.getNode=function(json){var s='',o='';for(var c in this.currencies){s=(json.currency===c)?' selected="selected" ':'';o+='<option value="'+c+'" '+s+'>'+this.currencies[c]+'</option>';}var h='<div class="container-fluid"><div class="row mt-3"><div class="col"><label for="stripecurrency">'+M.util.get_string('currency','availability_stripepayment')+'</label></div><div class="col"><select class="form-control" name="currency" id="stripecurrency">'+o+'</select></div></div><div class="row mt-3"><div class="col"><label for="stripeamount">'+M.util.get_string('amount','availability_stripepayment')+'</label></div><div class="col"><input class="form-control" name="amount" type="text" id="stripeamount"/></div></div><div class="row mt-3"><div class="col"><label for="stripeitemname">'+M.util.get_string('itemname','availability_stripepayment')+'</label></div><div class="col"><input class="form-control" name="itemname" type="text" id="stripeitemname"/></div></div></div>';var node=Y.Node.create('<span>'+h+'</span>');if(json.amount){node.one('input[name=amount]').set('value',json.amount);}if(json.itemname){node.one('input[name=itemname]').set('value',json.itemname);}if(!M.availability_stripepayment.form.addedEvents){M.availability_stripepayment.form.addedEvents=true;var root=Y.one('.availability-field');root.delegate('change',function(){M.core_availability.form.update();},'.availability_stripepayment select[name=currency]');root.delegate('change',function(){M.core_availability.form.update();},'.availability_stripepayment input');}return node;};M.availability_stripepayment.form.fillValue=function(value,node){value.currency=node.one('select[name=currency]').get('value');value.amount=this.getValue('amount',node);value.itemname=node.one('input[name=itemname]').get('value');};M.availability_stripepayment.form.getValue=function(field,node){var value=node.one('input[name='+field+']').get('value');if(!(/^[0-9]+([.,][0-9]+)?$/.test(value))){return value;}return parseFloat(value.replace(',','.'));};M.availability_stripepayment.form.fillErrors=function(errors,node){var value={};this.fillValue(value,node);if((value.amount!==undefined&&typeof value.amount==='string')||value.amount<=0){errors.push('availability_stripepayment:error_amount_required');}if(value.itemname===''){errors.push('availability_stripepayment:error_itemname_required');}};}, '@VERSION@', {"requires": ["base", "node", "event", "moodle-core_availability-form"]});

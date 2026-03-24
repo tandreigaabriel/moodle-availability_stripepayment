@@ -255,6 +255,14 @@ Copyright &copy; 2025 Andrei Toma — [tagwebdesign.co.uk](https://www.tagwebdes
 
 ## Changelog
 
+### 1.3.5
+
+- Migrated availability condition form editor from legacy YUI to an AMD ES6 module (`amd/src/form.js`) — `frontend.php` now overrides `include_javascript()` and loads via `js_call_amd()`, removing the YUI dependency from the teacher-facing form UI
+- Moved success-page countdown redirect from inline PHP `echo html_writer::script()` to a dedicated AMD module (`amd/src/success.js`) to comply with Moodle JS coding standards
+- Added GPL licence headers to all four YUI build/source files (retained for reference; no longer loaded at runtime)
+- Added explanatory comments to `webhook.php` clarifying that (a) `NO_MOODLE_COOKIES` etc. are Moodle core bootstrap constants and are exempt from the Frankenstyle prefix rule, and (b) the `$DB->update_record()` call is protected by Stripe cryptographic signature verification, not a Moodle capability check
+- Fixed non-ASCII box-drawing characters in `classes/transactions_table.php` comments (I18N002)
+
 ### 1.3.4
 
 - Added `require_capability('moodle/course:view', ...)` to `payment.php` and `success.php` — only enrolled users with course access can initiate or confirm a payment

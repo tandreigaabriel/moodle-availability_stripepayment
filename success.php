@@ -115,31 +115,13 @@ echo html_writer::div(
 
 echo html_writer::div('', 'availability-stripepayment-redirect-countdown', ['id' => 'stripe-countdown']);
 
-$str_second = get_string('second', 'availability_stripepayment');
-$str_seconds = get_string('seconds', 'availability_stripepayment');
-$str_prefix = get_string('redirecting_prefix', 'availability_stripepayment');
-$str_dot = get_string('dot', 'availability_stripepayment');
-
-echo html_writer::script("
-    var countdown = 5;
-    var el = document.getElementById('stripe-countdown');
-    var redirectUrl = " . json_encode($redirect_url->out(false)) . ";
-    var strSecond = " . json_encode($str_second) . ";
-    var strSeconds = " . json_encode($str_seconds) . ";
-    var strPrefix = " . json_encode($str_prefix) . ";
-    var strDot = " . json_encode($str_dot) . ";
-
-    function updateCountdown() {
-        el.textContent = strPrefix + ' ' + countdown + ' ' + (countdown !== 1 ? strSeconds : strSecond) + strDot;
-        if (countdown <= 0) {
-            window.location.href = redirectUrl;
-        } else {
-            countdown--;
-            setTimeout(updateCountdown, 1000);
-        }
-    }
-    updateCountdown();
-");
+$PAGE->requires->js_call_amd('availability_stripepayment/success', 'init', [
+    $redirect_url->out(false),
+    get_string('second', 'availability_stripepayment'),
+    get_string('seconds', 'availability_stripepayment'),
+    get_string('redirecting_prefix', 'availability_stripepayment'),
+    get_string('dot', 'availability_stripepayment'),
+]);
 
 // close wrapper
 echo html_writer::end_div();
