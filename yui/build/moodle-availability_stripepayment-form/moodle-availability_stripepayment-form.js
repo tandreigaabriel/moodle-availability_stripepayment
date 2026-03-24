@@ -1,3 +1,5 @@
+YUI.add('moodle-availability_stripepayment-form', function (Y, NAME) {
+
 // This file is part of Moodle - https://moodle.org/
 //
 // Moodle is free software: you can redistribute it and/or modify
@@ -14,19 +16,15 @@
 // along with Moodle.  If not, see <https://www.gnu.org/licenses/>.
 
 /**
- * Legacy YUI build for the Stripe availability condition form editor.
- * Superseded by amd/src/form.js — kept for reference only.
+ * Legacy YUI module for the Stripe availability condition form editor.
+ *
+ * This file is retained for reference only. The active implementation has
+ * been migrated to the AMD module at amd/src/form.js, loaded via
+ * frontend.php::include_javascript().
  *
  * @module     moodle-availability_stripepayment-form
  * @copyright  2025 Andrei Toma <https://www.tagwebdesign.co.uk>
  * @license    https://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
- */
-YUI.add('moodle-availability_stripepayment-form', function (Y, NAME) {
-
-/**
- * JavaScript for form editing stripe conditions.
- *
- * @module moodle-availability_stripepayment-form
  */
 M.availability_stripepayment = M.availability_stripepayment || {};
 
@@ -111,16 +109,33 @@ M.availability_stripepayment.form.getNode = function(json) {
 };
 
 M.availability_stripepayment.form.fillValue = function(value, node) {
+    // This function gets passed the node (from above) and a value
+    // object. Within that object, it must set up the correct values
+    // to use within the JSON data in the form. Should be compatible
+    // with the structure used in the __construct and save functions
+    // within condition.php.
     value.currency = node.one('select[name=currency]').get('value');
     value.amount = this.getValue('amount', node);
     value.itemname = node.one('input[name=itemname]').get('value');
 };
 
+/**
+ * Gets the numeric value of an input field. Supports decimal points (using
+ * dot or comma).
+ *
+ * @method getValue
+ * @return {Number|String} Value of field as number or string if not valid
+ */
 M.availability_stripepayment.form.getValue = function(field, node) {
+    // Get field value.
     var value = node.one('input[name=' + field + ']').get('value');
+
+    // If it is not a valid positive number, return false.
     if (!(/^[0-9]+([.,][0-9]+)?$/.test(value))) {
         return value;
     }
+
+    // Replace comma with dot and parse as floating-point.
     var result = parseFloat(value.replace(',', '.'));
     return result;
 };
@@ -136,5 +151,6 @@ M.availability_stripepayment.form.fillErrors = function(errors, node) {
         errors.push('availability_stripepayment:error_itemname_required');
     }
 };
+
 
 }, '@VERSION@', {"requires": ["base", "node", "event", "moodle-core_availability-form"]});
