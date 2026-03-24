@@ -82,22 +82,7 @@ function availability_stripepayment_find_condition($tree)
     }
 
     if (is_a($tree, 'core_availability\\tree')) {
-        $reflection = new ReflectionClass($tree);
-        $prop = $reflection->getProperty('children');
-        $prop->setAccessible(true);
-        $children = $prop->getValue($tree);
-
-        if ($children && is_array($children)) {
-            foreach ($children as $child) {
-                if (is_a($child, 'availability_stripepayment\\condition')) {
-                    return $child;
-                }
-                $result = availability_stripepayment_find_condition($child);
-                if ($result) {
-                    return $result;
-                }
-            }
-        }
+        return availability_stripepayment_find_in_availability_tree($tree);
     }
 
     if (is_object($tree) && isset($tree->type) && $tree->type === 'stripepayment') {
@@ -105,11 +90,47 @@ function availability_stripepayment_find_condition($tree)
     }
 
     if (is_object($tree) && isset($tree->c)) {
-        foreach ($tree->c as $child) {
-            $result = availability_stripepayment_find_condition($child);
-            if ($result) {
-                return $result;
-            }
+        return availability_stripepayment_find_in_children($tree->c);
+    }
+
+    return null;
+}
+
+/**
+ * Search for the Stripe condition inside a core_availability\tree via reflection.
+ *
+ * @param \core_availability\tree $tree
+ * @return \availability_stripepayment\condition|null
+ */
+function availability_stripepayment_find_in_availability_tree($tree)
+{
+    $reflection = new ReflectionClass($tree);
+    $prop = $reflection->getProperty('children');
+    $prop->setAccessible(true);
+    $children = $prop->getValue($tree);
+
+    if (!$children || !is_array($children)) {
+        return null;
+    }
+
+    return availability_stripepayment_find_in_children($children);
+}
+
+/**
+ * Iterate over an array of child nodes and return the first Stripe condition found.
+ *
+ * @param array $children
+ * @return \availability_stripepayment\condition|null
+ */
+function availability_stripepayment_find_in_children(array $children)
+{
+    foreach ($children as $child) {
+        if (is_a($child, 'availability_stripepayment\\condition')) {
+            return $child;
+        }
+        $result = availability_stripepayment_find_condition($child);
+        if ($result) {
+            return $result;
         }
     }
 
