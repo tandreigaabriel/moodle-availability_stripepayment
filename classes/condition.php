@@ -125,7 +125,15 @@ class condition extends \core_availability\condition
      */
     public function get_description($full, $not, \core_availability\info $info): string
     {
-        return $this->get_either_description($not, !$full, $info);
+        if ($not) {
+            return get_string('payment_completed', 'availability_stripepayment');
+        }
+        $a = (object) [
+            'item'     => $this->itemname ?? '',
+            'amount'   => number_format((float) $this->amount, 2),
+            'currency' => $this->currency ?? '',
+        ];
+        return get_string('payment_required_desc', 'availability_stripepayment', $a);
     }
 
     /**
