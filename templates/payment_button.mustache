@@ -1,8 +1,14 @@
 {{!
-    Template: availability_stripepayment/payment_button
+    @template availability_stripepayment/payment_button
 
     Renders the payment prompt and pay button inside the availability info area
     of a locked activity. Rendered server-side by condition::get_either_description().
+
+    Example context (json):
+    {
+        "payurl": "https://example.com/pay",
+        "description": "Please complete payment to unlock this activity."
+    }
 
     Context variables:
       - payurl      (string) Payment URL (raw, not HTML-encoded — template handles escaping)
@@ -12,6 +18,7 @@
     @copyright  2025 Andrei Toma <https://www.tagwebdesign.co.uk>
     @license    https://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
 }}
+
 <div class="availability-stripepayment-payment">
     <p class="availability-stripepayment-description">{{{description}}}</p>
     <a href="{{payurl}}"

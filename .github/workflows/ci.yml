@@ -11,6 +11,7 @@ jobs:
         image: postgres:15
         env:
           POSTGRES_USER: "postgres"
+          POSTGRES_DB: "moodle"
           POSTGRES_HOST_AUTH_METHOD: "trust"
         ports:
           - 5432:5432
@@ -64,8 +65,14 @@ jobs:
           sudo locale-gen en_AU.UTF-8
           echo "NVM_DIR=$HOME/.nvm" >> $GITHUB_ENV
 
+      # ✅ FIXED DATABASE CONNECTION
       - name: Install Moodle
-        run: moodle-plugin-ci install --plugin ./plugin --db-host=127.0.0.1
+        run: moodle-plugin-ci install \
+          --plugin ./plugin \
+          --db-host=127.0.0.1 \
+          --db-user=postgres \
+          --db-pass='' \
+          --db-name=moodle
         env:
           DB: ${{ matrix.database }}
           MOODLE_BRANCH: ${{ matrix.moodle-branch }}
@@ -79,7 +86,7 @@ jobs:
         if: ${{ !cancelled() }}
         run: moodle-plugin-ci phpmd
 
-      #
+      # ✅ Ignore vendor (Stripe SDK)
       - name: Moodle Code Checker
         if: ${{ !cancelled() }}
         run: moodle-plugin-ci phpcs --max-warnings 0 --ignore=vendor/*
