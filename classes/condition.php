@@ -20,94 +20,91 @@ defined('MOODLE_INTERNAL') || die();
 
 /**
  * Stripe payment availability condition.
+ *
+ * @package availability_stripepayment
  */
 class condition extends \core_availability\condition
 {
 
-    /** @var float|null Payment amount required. */
+    /** @var float|null */
     public $amount;
 
-    /** @var string|null ISO 4217 currency code. */
+    /** @var string|null */
     public $currency;
 
-    /** @var string|null Display name for the payment item. */
+    /** @var string|null */
     public $itemname;
 
     /**
      * Constructor.
      *
-     * @param \stdClass $structure Saved condition data from the database.
+     * @param \stdClass $structure
      */
-    public function __construct($structure)
+    public function __construct(\stdClass $structure)
     {
-        if (isset($structure->amount)) {
-            $this->amount = $structure->amount;
-        }
-        if (isset($structure->currency)) {
-            $this->currency = $structure->currency;
-        }
-        if (isset($structure->itemname)) {
-            $this->itemname = $structure->itemname;
-        }
+        $this->amount = $structure->amount ?? null;
+        $this->currency = $structure->currency ?? null;
+        $this->itemname = $structure->itemname ?? null;
     }
 
     /**
-     * Saves tree data back to a structure object.
+     * Save condition.
      *
-     * @return \stdClass JSON-encodable condition data.
+     * @return \stdClass
      */
-    public function save()
+    public function save(): \stdClass
     {
         $result = (object) ['type' => 'stripepayment'];
-        if ($this->amount) {
+
+        if ($this->amount !== null) {
             $result->amount = $this->amount;
         }
-        if ($this->currency) {
+        if ($this->currency !== null) {
             $result->currency = $this->currency;
         }
-        if ($this->itemname) {
+        if ($this->itemname !== null) {
             $result->itemname = $this->itemname;
         }
+
         return $result;
     }
 
     /**
-     * Returns a JSON object which corresponds to a condition of this type.
+     * Get JSON representation.
      *
-     * @param float  $amount   Payment amount.
-     * @param string $currency ISO 4217 currency code.
-     * @param string $itemname Display name for the payment item.
-     * @return \stdClass Condition data object.
+     * @param float $amount
+     * @param string $currency
+     * @param string $itemname
+     * @return \stdClass
      */
-    public static function get_json($amount, $currency, $itemname)
+    public static function get_json(float $amount, string $currency, string $itemname): \stdClass
     {
         return (object) [
             'type' => 'stripepayment',
             'amount' => $amount,
             'currency' => $currency,
-            'itemname' => $itemname
+            'itemname' => $itemname,
         ];
     }
 
     /**
-     * Determines whether a particular item is currently available.
+     * Check availability.
      *
-     * @param bool                    $not        Set true if we are inverting the condition.
-     * @param \core_availability\info $info       Item we're checking.
-     * @param bool                    $grabthelot Performance hint: not used by this condition.
-     * @param int                     $userid     User ID to check availability for.
-     * @return bool True if access is permitted under this condition.
+     * @param bool $not
+     * @param \core_availability\info $info
+     * @param bool $grabthelot
+     * @param int $userid
+     * @return bool
      */
-    public function is_available($not, \core_availability\info $info, $grabthelot, $userid)
+    public function is_available(bool $not, \core_availability\info $info, bool $grabthelot, int $userid): bool
     {
         global $DB;
 
-        // Required by Moodle API but not used.
         unset($grabthelot);
 
         $allow = false;
 
-        if (is_a($info, '\core_availability\info_module')) {
+        if ($info instanceof \core_availability\info_module) {
             $allow = $DB->record_exists('availability_stripepayment_payments', [
                 'userid' => $userid,
                 'cmid' => $info->get_course_module()->id,
@@ -115,165 +112,19 @@ class condition extends \core_availability\condition
             ]);
         }
 
-        if ($not) {
-            $allow = !$allow;
-        }
-
-        return $allow;
+        return $not ? !$allow : $allow;
     }
 
     /**
-     * Obtains a string describing this restriction.
+     * Get description.
      *
-     * @param bool                    $full Set true if this is the 'full information' view.
-     * @param bool                    $not  Set true if we are inverting the condition.
-     * @param \core_availability\info $info Item we're checking.
-     * @return string Description of the restriction.
+     * @param bool $full
+     * @param bool $not
+     * @param \core_availability\info $info
+     * @return string
      */
-    public function get_description($full, $not, \core_availability\info $info)
+    public function get_description(bool $full, bool $not, \core_availability\info $info): string
     {
         return $this->get_either_description($not, !$full, $info);
-    }
-
-    /**
-     * Returns the availability description for both full and standalone views.
-     *
-     * @param bool                    $not        Set true if we are inverting the condition.
-     * @param bool                    $standalone True when rendered outside a full info block.
-     * @param \core_availability\info $info       Item we're checking.
-     * @return string HTML or plain-text description string.
-     */
-    protected function get_either_description($not, $standalone, $info)
-    {
-        global $USER, $DB, $OUTPUT, $PAGE;
-
-        $cm = $info->get_course_module();
-        $context = $info->get_context();
-
-        // Admins/teachers see report link instead of payment
-        if (
-            has_capability('moodle/course:manageactivities', $context, $USER->id) ||
-            has_capability('moodle/site:config', \context_system::instance(), $USER->id)
-        ) {
-
-            $reporturl = new \moodle_url(
-                '/availability/condition/stripepayment/activity_report.php',
-                ['cmid' => $cm->id]
-            );
-
-            $reportlink = \html_writer::link(
-                $reporturl,
-                get_string('activitypaymentreport', 'availability_stripepayment'),
-                ['class' => 'btn btn-sm btn-outline-info ms-2']
-            );
-
-            return get_string('already_paid', 'availability_stripepayment') . ' ' . $reportlink;
-        }
-
-        if ($not) {
-            return get_string('not_paid', 'availability_stripepayment');
-        }
-
-        $haspaid = $DB->record_exists('availability_stripepayment_payments', [
-            'userid' => $USER->id,
-            'cmid' => $cm->id,
-            'status' => 'completed',
-        ]);
-
-        if ($haspaid) {
-            return get_string('already_paid', 'availability_stripepayment');
-        }
-
-        $formattedamount = $this->format_amount_for_display();
-        $itemname = $this->itemname ?: $cm->name;
-
-        $description = get_string(
-            'payment_required_desc',
-            'availability_stripepayment',
-            (object) [
-                'item' => s($itemname),
-                'amount' => s($formattedamount),
-                'currency' => s(strtoupper($this->currency)),
-            ]
-        );
-
-        $url = new \moodle_url('/availability/condition/stripepayment/payment.php', [
-            'cmid' => $cm->id,
-            'sesskey' => sesskey(),
-        ]);
-
-        if ($standalone) {
-            return \html_writer::tag('span', $description, ['class' => 'd-block small mb-1']) .
-                \html_writer::link(
-                    $url,
-                    get_string('pay_now', 'availability_stripepayment'),
-                    ['class' => 'btn btn-sm btn-primary']
-                );
-        }
-
-        $PAGE->requires->js_call_amd('availability_stripepayment/payment', 'init');
-
-        return $OUTPUT->render_from_template('availability_stripepayment/payment_button', [
-            'payurl' => $url->out(false),
-            'description' => $description,
-        ]);
-    }
-
-    /**
-     * Format amount for display.
-     *
-     * @return string Formatted amount string with currency symbol.
-     */
-    private function format_amount_for_display()
-    {
-        // Shortened variable name (fixes PHPMD warning)
-        $zerodecimals = [
-            'BIF',
-            'CLP',
-            'DJF',
-            'GNF',
-            'JPY',
-            'KMF',
-            'KRW',
-            'MGA',
-            'PYG',
-            'RWF',
-            'UGX',
-            'VND',
-            'VUV',
-            'XAF',
-            'XOF',
-            'XPF'
-        ];
-
-        $displayamount = $this->amount;
-
-        $currencysymbols = [
-            'USD' => '$',
-            'EUR' => '€',
-            'GBP' => '£',
-            'JPY' => '¥',
-            'CAD' => 'C$',
-            'AUD' => 'A$',
-            'AED' => 'AED ',
-        ];
-
-        $symbol = $currencysymbols[strtoupper($this->currency)] ?? strtoupper($this->currency) . ' ';
-
-        if (in_array(strtoupper($this->currency), $zerodecimals)) {
-            return $symbol . number_format($displayamount, 0);
-        }
-
-        return $symbol . number_format($displayamount, 2);
-    }
-
-    /**
-     * Debug string.
-     *
-     * @return string Short debug description.
-     */
-    protected function get_debug_string()
-    {
-        return $this->currency . ' ' . $this->amount . ' (' . $this->itemname . ')';
     }
 }

@@ -36,6 +36,8 @@ use core_privacy\local\request\transform;
 
 /**
  * Privacy provider for the Stripe availability condition.
+ *
+ * @package    availability_stripepayment
  */
 class provider implements
     \core_privacy\local\metadata\provider,
@@ -46,8 +48,8 @@ class provider implements
     /**
      * Returns metadata about the data stored by this plugin.
      *
-     * @param collection $collection Metadata collection to add to.
-     * @return collection Updated metadata collection.
+     * @param collection $collection
+     * @return collection
      */
     public static function get_metadata(collection $collection): collection
     {
@@ -70,10 +72,10 @@ class provider implements
     }
 
     /**
-     * Gets the list of contexts that contain user information for a given user.
+     * Get contexts for a user.
      *
-     * @param int $userid The user ID to search for.
-     * @return contextlist List of contexts containing the user's data.
+     * @param int $userid
+     * @return contextlist
      */
     public static function get_contexts_for_userid(int $userid): contextlist
     {
@@ -92,9 +94,9 @@ class provider implements
     }
 
     /**
-     * Gets the list of users who have data within a context.
+     * Get users in context.
      *
-     * @param userlist $userlist The userlist to add users to.
+     * @param \core_privacy\local\request\userlist $userlist
      * @return void
      */
     public static function get_users_in_context(userlist $userlist): void
@@ -115,9 +117,9 @@ class provider implements
     }
 
     /**
-     * Export personal data for the given approved contextlist.
+     * Export user data.
      *
-     * @param approved_contextlist $contextlist The approved contextlist to export data for.
+     * @param approved_contextlist $contextlist
      * @return void
      */
     public static function export_user_data(approved_contextlist $contextlist): void
@@ -166,9 +168,9 @@ class provider implements
     }
 
     /**
-     * Delete all data for all users in the specified context.
+     * Delete all users data in context.
      *
-     * @param \context $context The context to delete data in.
+     * @param \context $context
      * @return void
      */
     public static function delete_data_for_all_users_in_context(\context $context): void
@@ -185,9 +187,9 @@ class provider implements
     }
 
     /**
-     * Delete personal data for the given approved contextlist.
+     * Delete user data.
      *
-     * @param approved_contextlist $contextlist The approved contextlist to delete data for.
+     * @param approved_contextlist $contextlist
      * @return void
      */
     public static function delete_data_for_user(approved_contextlist $contextlist): void
@@ -213,9 +215,9 @@ class provider implements
     }
 
     /**
-     * Delete multiple users within a single context.
+     * Delete multiple users.
      *
-     * @param approved_userlist $userlist The approved userlist to delete data for.
+     * @param approved_userlist $userlist
      * @return void
      */
     public static function delete_data_for_users(approved_userlist $userlist): void

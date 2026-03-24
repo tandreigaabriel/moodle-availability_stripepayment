@@ -8,19 +8,20 @@
  * Upgrade steps for the Stripe availability condition.
  *
  * @package    availability_stripepayment
- * @copyright  2025 Andrei Toma <https://www.tagwebdesign.co.uk>
+ * @copyright  2025 Andrei Toma
  * @license    https://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
  */
 
 defined('MOODLE_INTERNAL') || die();
 
 /**
- * Run upgrade steps.
+ * Execute plugin upgrade.
  *
  * @param int $oldversion Version we are upgrading from.
  * @return bool True on success.
  */
-function xmldb_availability_stripepayment_upgrade($oldversion) {
+function xmldb_availability_stripepayment_upgrade(int $oldversion): bool
+{
     global $DB;
 
     $dbman = $DB->get_manager();
@@ -29,7 +30,6 @@ function xmldb_availability_stripepayment_upgrade($oldversion) {
 
         $table = new xmldb_table('availability_stripepayment_payments');
 
-        // Add stripe_payment_intent field.
         $field = new xmldb_field(
             'stripe_payment_intent',
             XMLDB_TYPE_CHAR,
@@ -45,13 +45,11 @@ function xmldb_availability_stripepayment_upgrade($oldversion) {
             $dbman->add_field($table, $field);
         }
 
-        // Index on cmid.
         $index = new xmldb_index('cmid', XMLDB_INDEX_NOTUNIQUE, ['cmid']);
         if (!$dbman->index_exists($table, $index)) {
             $dbman->add_index($table, $index);
         }
 
-        // Index on status.
         $index = new xmldb_index('status', XMLDB_INDEX_NOTUNIQUE, ['status']);
         if (!$dbman->index_exists($table, $index)) {
             $dbman->add_index($table, $index);
@@ -66,8 +64,8 @@ function xmldb_availability_stripepayment_upgrade($oldversion) {
 
             $DB->execute(
                 "UPDATE {course_modules}
-                    SET availability = REPLACE(availability, :find, :replace)
-                  WHERE availability LIKE :like",
+                 SET availability = REPLACE(availability, :find, :replace)
+                 WHERE availability LIKE :like",
                 [
                     'find' => '"type":"' . $oldtype . '"',
                     'replace' => '"type":"stripepayment"',
@@ -77,8 +75,8 @@ function xmldb_availability_stripepayment_upgrade($oldversion) {
 
             $DB->execute(
                 "UPDATE {course_sections}
-                    SET availability = REPLACE(availability, :find, :replace)
-                  WHERE availability LIKE :like",
+                 SET availability = REPLACE(availability, :find, :replace)
+                 WHERE availability LIKE :like",
                 [
                     'find' => '"type":"' . $oldtype . '"',
                     'replace' => '"type":"stripepayment"',
