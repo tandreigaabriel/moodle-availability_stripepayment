@@ -6,6 +6,7 @@
 node_modules/
 npm-debug.log*
 grunt-debug.log*
+build-amd.js
 moodle_plugin_standards.txt
 # Composer lock (not needed because vendor is bundled)
 composer.lock
