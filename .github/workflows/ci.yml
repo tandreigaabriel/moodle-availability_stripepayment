@@ -67,7 +67,7 @@ jobs:
 
       - name: Moodle Code Checker
         if: ${{ !cancelled() }}
-        run: moodle-plugin-ci phpcs --max-warnings 0
+         run: moodle-plugin-ci phpcs --max-warnings 0 --ignore=vendor/*
 
       - name: Moodle PHPDoc Checker
         continue-on-error: true
