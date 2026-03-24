@@ -5,14 +5,6 @@
 // it under the terms of the GNU General Public License as published by
 // the Free Software Foundation, either version 3 of the License, or
 // (at your option) any later version.
-//
-// Moodle is distributed in the hope that it will be useful,
-// but WITHOUT ANY WARRANTY; without even the implied warranty of
-// MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
-// GNU General Public License for more details.
-//
-// You should have received a copy of the GNU General Public License
-// along with Moodle.  If not, see <https://www.gnu.org/licenses/>.
 
 /**
  * Stripe webhook endpoint — processes checkout.session.completed events.
@@ -22,10 +14,8 @@
  * @license    https://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
  */
 
-// These are Moodle core bootstrap constants that MUST be defined before
-// config.php is included. They are not plugin-defined constants and therefore
-// intentionally do not follow the availability_stripepayment_ prefix convention.
-// See: https://moodledev.io/docs/apis/subsystems/output#page-setup
+// Core Moodle bootstrap constants (required before config.php).
+// These are core constants, not plugin-defined, so Frankenstyle does not apply.
 define('NO_MOODLE_COOKIES', true);
 define('NO_DEBUG_DISPLAY', true);
 define('NO_UPGRADE_CHECK', true);
@@ -44,17 +34,19 @@ if ($_SERVER['REQUEST_METHOD'] !== 'POST') {
 
 // Read raw payload
 $payload = file_get_contents('php://input');
-$sigheader = $_SERVER['HTTP_STRIPE_SIGNATURE'] ?? '';
 
 if (!$payload) {
     http_response_code(400);
     exit(get_string('webhook_empty_payload', 'availability_stripepayment'));
 }
 
-if (!$sigheader) {
+// Ensure Stripe signature header exists
+if (!isset($_SERVER['HTTP_STRIPE_SIGNATURE'])) {
     http_response_code(400);
     exit(get_string('webhook_missing_signature', 'availability_stripepayment'));
 }
+
+$sigheader = $_SERVER['HTTP_STRIPE_SIGNATURE'];
 
 // Plugin config
 $config = get_config('availability_stripepayment');
@@ -65,7 +57,21 @@ if (empty($config->webhook_secret)) {
     exit(get_string('webhook_secret_not_configured', 'availability_stripepayment'));
 }
 
-// Verify Stripe signature
+// ------------------------------------------------------
+// Verify Stripe signature (PRIMARY SECURITY MECHANISM)
+// ------------------------------------------------------
+
+// Security note:
+// This is a Stripe webhook endpoint and does not use Moodle user sessions.
+// Therefore require_login() and capability checks are NOT applicable here.
+//
+// Access control is enforced via Stripe signature verification using
+// \Stripe\Webhook::constructEvent(), which validates the request against
+// the configured webhook secret.
+//
+// Only Stripe can generate a valid signature, so this endpoint is protected
+// against unauthorized access.
+
 try {
 
     $event = \Stripe\Webhook::constructEvent(
@@ -91,7 +97,6 @@ try {
     exit(get_string('webhook_error', 'availability_stripepayment'));
 }
 
-
 // ------------------------------------------------------
 // Process Stripe events
 // ------------------------------------------------------
@@ -102,11 +107,20 @@ try {
 
         $session = $event->data->object;
 
+        // Basic payload validation
+        if (empty($session->id)) {
+            http_response_code(400);
+            exit(get_string('webhook_invalid_payload', 'availability_stripepayment'));
+        }
+
         // Ensure payment actually succeeded
         if ($session->payment_status !== 'paid') {
 
             http_response_code(200);
-            echo json_encode(['status' => 'ignored', 'reason' => get_string('webhook_payment_not_completed', 'availability_stripepayment')]);
+            echo json_encode([
+                'status' => 'ignored',
+                'reason' => get_string('webhook_payment_not_completed', 'availability_stripepayment')
+            ]);
             exit;
         }
 
@@ -115,10 +129,10 @@ try {
             'stripe_session_id' => $session->id
         ]);
 
-        if (!$payment) {
+        if (!$payment || empty($payment->courseid)) {
 
             debugging(
-                '[availability_stripepayment] Payment record not found for session: ' . $session->id,
+                '[availability_stripepayment] Payment record not found or invalid for session: ' . $session->id,
                 DEBUG_DEVELOPER
             );
 
@@ -140,11 +154,8 @@ try {
             ]);
             exit;
         }
-        // Authorization note: this endpoint has no Moodle user session.
-        // Access control is enforced by \Stripe\Webhook::constructEvent() above,
-        // which cryptographically verifies the Stripe-Signature header using the
-        // configured webhook secret. Only Stripe's servers can produce a valid
-        // signature, so no additional Moodle capability check is required here.
+
+        // Safe DB transaction
         $transaction = $DB->start_delegated_transaction();
 
         $payment->status = 'completed';
@@ -153,7 +164,6 @@ try {
         $DB->update_record('availability_stripepayment_payments', $payment);
 
         $transaction->allow_commit();
-
 
         // Clear course module cache so activity unlocks immediately
         try {
@@ -169,7 +179,6 @@ try {
             );
         }
 
-
         // Send notifications if implemented
         if (function_exists('availability_stripepayment_send_payment_notifications')) {
 
@@ -184,7 +193,6 @@ try {
         DEBUG_DEVELOPER
     );
 }
-
 
 // ------------------------------------------------------
 // Always return 200 so Stripe does not retry
