@@ -1,0 +1,104 @@
+name: Moodle Plugin CI
+
+on:
+  push:
+    branches: [ main ]
+  pull_request:
+    branches: [ main ]
+
+jobs:
+  test:
+    runs-on: ubuntu-latest
+
+    services:
+      postgres:
+        image: postgres:13
+        env:
+          POSTGRES_USER: postgres
+          POSTGRES_PASSWORD: postgres
+          POSTGRES_DB: moodle
+        ports:
+          - 5432:5432
+        options: >-
+          --health-cmd pg_isready
+          --health-interval 10s
+          --health-timeout 5s
+          --health-retries 3
+
+    strategy:
+      matrix:
+        php-version: ['8.1', '8.2', '8.3']
+        moodle-branch: ['MOODLE_405_STABLE', 'main']
+
+    steps:
+      - name: Check out plugin
+        uses: actions/checkout@v4
+        with:
+          path: plugin
+
+      - name: Set up PHP ${{ matrix.php-version }}
+        uses: shivammathur/setup-php@v2
+        with:
+          php-version: ${{ matrix.php-version }}
+          extensions: pgsql, zip, gd, curl, xmlrpc, soap, intl, xml
+          coverage: none
+
+      - name: Install Moodle plugin CI
+        run: |
+          composer create-project -n --no-dev --prefer-dist \
+            moodlehq/moodle-plugin-ci ci ^4
+          echo "$(cd ci && pwd)/bin" >> "$GITHUB_PATH"
+          echo "$(cd ci && pwd)/vendor/bin" >> "$GITHUB_PATH"
+
+      - name: Install Moodle
+        run: |
+          moodle-plugin-ci install \
+            --plugin ./plugin \
+            --db-host 127.0.0.1 \
+            --db-type pgsql \
+            --db-user postgres \
+            --db-pass postgres \
+            --db-name moodle \
+            --moodle-branch ${{ matrix.moodle-branch }}
+        env:
+          DB: pgsql
+
+      - name: PHP Lint
+        if: always()
+        run: moodle-plugin-ci phplint
+
+      - name: PHP Copy/Paste Detector
+        if: always()
+        run: moodle-plugin-ci phpcpd
+
+      - name: PHP Mess Detector
+        if: always()
+        run: moodle-plugin-ci phpmd
+
+      - name: Moodle Code Checker
+        if: always()
+        run: moodle-plugin-ci codechecker
+
+      - name: Moodle PHPDoc Checker
+        if: always()
+        run: moodle-plugin-ci phpdoc
+
+      - name: Validate
+        if: always()
+        run: moodle-plugin-ci validate
+
+      - name: Check upgrade savepoints
+        if: always()
+        run: moodle-plugin-ci savepoints
+
+      - name: Mustache Lint
+        if: always()
+        run: moodle-plugin-ci mustache
+
+      - name: Grunt (AMD build check)
+        if: always()
+        run: moodle-plugin-ci grunt
+
+      - name: PHPUnit
+        if: always()
+        run: moodle-plugin-ci phpunit --coverage-text

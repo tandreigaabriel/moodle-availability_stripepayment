@@ -255,6 +255,14 @@ Copyright &copy; 2025 Andrei Toma — [tagwebdesign.co.uk](https://www.tagwebdes
 
 ## Changelog
 
+### 1.3.4
+
+- Added `require_capability('moodle/course:view', ...)` to `payment.php` and `success.php` — only enrolled users with course access can initiate or confirm a payment
+- Moved `$PAGE->set_context()` in `success.php` to immediately after the course module is resolved, before any output or capability check
+- Removed incorrect `$USER` override in `webhook.php` — `NO_MOODLE_COOKIES` already prevents session loading for the server-to-server webhook request
+- Fixed incomplete GPL licence header in `classes/privacy/provider.php`
+- Added GitHub Actions CI pipeline (`.github/workflows/ci.yml`) using `moodlehq/moodle-plugin-ci` — runs PHP lint, code checker, PHPDoc, Mustache lint, Grunt AMD build check, and PHPUnit across PHP 8.1/8.2/8.3 and Moodle 4.5 stable + main
+
 ### 1.3.3
 
 - Fixed accounts team and admin email notifications not being sent — `success.php` now sends notifications immediately when the student returns from Stripe, resolving a race condition where the webhook saw the payment already completed and skipped the notification step

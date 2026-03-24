@@ -31,10 +31,7 @@ require_once('../../../config.php');
 require_once(__DIR__ . '/vendor/autoload.php');
 require_once(__DIR__ . '/lib.php');
 
-// Webhook is server-to-server, no Moodle user context needed.
-global $USER, $DB;
-$USER = new stdClass();
-$USER->id = 0;
+global $DB;
 
 // Only POST requests allowed
 if ($_SERVER['REQUEST_METHOD'] !== 'POST') {

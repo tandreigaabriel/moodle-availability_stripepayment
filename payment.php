@@ -38,9 +38,12 @@ if (!$cm) {
 
 require_course_login($cm->course);
 
+$context = context_module::instance($cmid);
 $PAGE->set_url('/availability/condition/stripepayment/payment.php', ['cmid' => $cmid]);
-$PAGE->set_context(context_module::instance($cmid));
+$PAGE->set_context($context);
 $PAGE->set_pagelayout('incourse');
+
+require_capability('moodle/course:view', context_course::instance($cm->course));
 
 // Check if Stripe is configured
 $config = get_config('availability_stripepayment');

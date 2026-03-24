@@ -49,6 +49,10 @@ if (!$cm) {
     );
 }
 
+$context = context_course::instance($payment->courseid);
+$PAGE->set_context($context);
+require_capability('moodle/course:view', $context);
+
 // Stripe verification fallback
 if ($payment->status !== 'completed') {
     $config = get_config('availability_stripepayment');
@@ -79,7 +83,6 @@ if ($payment->status !== 'completed') {
 $course = $DB->get_record('course', ['id' => $payment->courseid]);
 
 $PAGE->set_url('/availability/condition/stripepayment/success.php', ['session_id' => $session_id]);
-$PAGE->set_context(context_course::instance($payment->courseid));
 $PAGE->set_title(get_string('payment_successful_title', 'availability_stripepayment'));
 $PAGE->set_heading($course->fullname);
 
