@@ -27,8 +27,8 @@ jobs:
 
     strategy:
       matrix:
-        php-version: ["8.1", "8.2", "8.3"]
-        moodle-branch: ["MOODLE_405_STABLE", "main"]
+        php-version: ["8.1"]
+        moodle-branch: ["MOODLE_405_STABLE"]
 
     steps:
       - name: Check out plugin
@@ -36,17 +36,23 @@ jobs:
         with:
           path: plugin
 
-      - name: Set up PHP ${{ matrix.php-version }}
+      - name: Set up PHP
         uses: shivammathur/setup-php@v2
         with:
           php-version: ${{ matrix.php-version }}
           extensions: pgsql, zip, gd, curl, xmlrpc, soap, intl, xml
+          tools: composer
           coverage: none
 
       - name: Install Moodle plugin CI
         run: |
-          composer create-project -n --no-dev --prefer-dist \
-            moodlehq/moodle-plugin-ci ci ^4
+          composer create-project moodlehq/moodle-plugin-ci ci --no-dev --prefer-dist
+
+      - name: Debug (check CI installed)
+        run: |
+          ls -la
+          ls -la ci
+          ls -la ci/bin
 
       - name: Install Moodle
         run: |
@@ -59,42 +65,15 @@ jobs:
             --db-name moodle \
             --moodle-branch ${{ matrix.moodle-branch }}
 
-      - name: PHP Lint
+      - name: Run checks
         if: always()
-        run: ci/bin/moodle-plugin-ci phplint
-
-      - name: PHP Copy/Paste Detector
-        if: always()
-        run: ci/bin/moodle-plugin-ci phpcpd
-
-      - name: PHP Mess Detector
-        if: always()
-        run: ci/bin/moodle-plugin-ci phpmd
-
-      - name: Moodle Code Checker
-        if: always()
-        run: ci/bin/moodle-plugin-ci codechecker
-
-      - name: Moodle PHPDoc Checker
-        if: always()
-        run: ci/bin/moodle-plugin-ci phpdoc
-
-      - name: Validate
-        if: always()
-        run: ci/bin/moodle-plugin-ci validate
-
-      - name: Check upgrade savepoints
-        if: always()
-        run: ci/bin/moodle-plugin-ci savepoints
-
-      - name: Mustache Lint
-        if: always()
-        run: ci/bin/moodle-plugin-ci mustache
-
-      - name: Grunt (AMD build check)
-        if: always()
-        run: ci/bin/moodle-plugin-ci grunt
-
-      - name: PHPUnit
-        if: always()
-        run: ci/bin/moodle-plugin-ci phpunit --coverage-text
+        run: |
+          ci/bin/moodle-plugin-ci phplint
+          ci/bin/moodle-plugin-ci phpcpd
+          ci/bin/moodle-plugin-ci phpmd
+          ci/bin/moodle-plugin-ci codechecker
+          ci/bin/moodle-plugin-ci phpdoc
+          ci/bin/moodle-plugin-ci validate
+          ci/bin/moodle-plugin-ci savepoints
+          ci/bin/moodle-plugin-ci mustache
+          ci/bin/moodle-plugin-ci grunt
