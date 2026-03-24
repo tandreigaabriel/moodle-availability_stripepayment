@@ -127,4 +127,14 @@ class condition extends \core_availability\condition
     {
         return $this->get_either_description($not, !$full, $info);
     }
+
+    /**
+     * Get a string for debugging.
+     *
+     * @return string
+     */
+    protected function get_debug_string(): string
+    {
+        return 'amount=' . $this->amount . ' currency=' . $this->currency;
+    }
 }
