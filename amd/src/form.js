@@ -35,11 +35,12 @@ define([], function() {
          *
          * @param {Object} currencies Map of ISO code => localised currency name
          */
-        init: function(currencies) {
+        init: function(currencies, strings) {
             M.availability_stripepayment = M.availability_stripepayment || {};
 
             M.availability_stripepayment.form = {
                 currencies: currencies,
+                strings: strings,
                 addedEvents: false,
 
                 /**
@@ -62,7 +63,7 @@ define([], function() {
                     var html = '<span><div class="container-fluid">'
                         + '<div class="row mt-3">'
                         + '<div class="col"><label for="stripecurrency">'
-                        + M.util.get_string('currency', 'availability_stripepayment')
+                        + this.strings.currency
                         + '</label></div>'
                         + '<div class="col">'
                         + '<select class="form-control" name="currency" id="stripecurrency">'
@@ -70,14 +71,14 @@ define([], function() {
                         + '</div></div>'
                         + '<div class="row mt-3">'
                         + '<div class="col"><label for="stripeamount">'
-                        + M.util.get_string('amount', 'availability_stripepayment')
+                        + this.strings.amount
                         + '</label></div>'
                         + '<div class="col">'
                         + '<input class="form-control" name="amount" type="text" id="stripeamount" />'
                         + '</div></div>'
                         + '<div class="row mt-3">'
                         + '<div class="col"><label for="stripeitemname">'
-                        + M.util.get_string('itemname', 'availability_stripepayment')
+                        + this.strings.itemname
                         + '</label></div>'
                         + '<div class="col">'
                         + '<input class="form-control" name="itemname" type="text" id="stripeitemname" />'

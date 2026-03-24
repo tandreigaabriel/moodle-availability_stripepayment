@@ -52,15 +52,17 @@ class frontend extends \core_availability\frontend
 
         $currencies = \get_string_manager()->get_list_of_currencies();
 
-        $PAGE->requires->strings_for_js(
-            ['currency', 'amount', 'itemname'],
-            'availability_stripepayment'
-        );
-
         $PAGE->requires->js_call_amd(
             'availability_stripepayment/form',
             'init',
-            [$currencies]
+            [
+                $currencies,
+                [
+                    'currency' => get_string('currency', 'availability_stripepayment'),
+                    'amount'   => get_string('amount', 'availability_stripepayment'),
+                    'itemname' => get_string('itemname', 'availability_stripepayment'),
+                ],
+            ]
         );
     }
 }
