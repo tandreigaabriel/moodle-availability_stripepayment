@@ -1,9 +1,0 @@
-<?xml version="1.0"?>
-<ruleset name="Moodle Plugin">
-
-    <rule ref="moodle"/>
-
-    <!-- Ignore vendor -->
-    <exclude-pattern>*/vendor/*</exclude-pattern>
-
-</ruleset>
