@@ -57,11 +57,11 @@ jobs:
         run: moodle-plugin-ci phpmd
 
       - name: Moodle Code Checker
-        run: moodle-plugin-ci phpcs --ignore=vendor --max-warnings=0
+        run: moodle-plugin-ci phpcs --exclude=vendor --max-warnings=0
 
       - name: Moodle PHPDoc Checker
         continue-on-error: true
-        run: moodle-plugin-ci phpdoc --ignore=vendor
+        run: moodle-plugin-ci phpdoc --exclude=vendor
 
       - name: Validate
         run: moodle-plugin-ci validate
