@@ -22,8 +22,6 @@
  * @license    https://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
  */
 
-defined('MOODLE_INTERNAL') || die();
-
 /**
  * Execute plugin upgrade.
  *
@@ -31,5 +29,6 @@ defined('MOODLE_INTERNAL') || die();
  * @return bool True on success.
  */
 function xmldb_availability_stripepayment_upgrade($oldversion) {
+    // No upgrade steps needed yet.
     return true;
 }
