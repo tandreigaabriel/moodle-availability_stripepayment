@@ -189,7 +189,9 @@ if ($courseid || $status) {
     echo html_writer::div(
         get_string('filteractive', 'availability_stripepayment') . ' ' .
         implode(' &bull; ', $active) . ' &mdash; ' .
-        html_writer::link($baseurl, get_string('clearfilter', 'availability_stripepayment'), ['class' => 'alert-link']),
+        html_writer::link($baseurl, get_string('clearfilter', 'availability_stripepayment'),
+            ['class' => 'alert-link']
+        ),
         'alert alert-info py-2'
     );
 }
