@@ -18,7 +18,7 @@
  * Admin settings for the Stripe availability condition.
  *
  * @package    availability_stripepayment
- * @copyright  2025 Andrei Toma <https://www.tagwebdesign.co.uk>
+ * @copyright  2025 Andrei Toma
  * @license    https://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
  */
 
@@ -26,7 +26,7 @@ defined('MOODLE_INTERNAL') || die();
 
 if ($hassiteconfig && isset($settings)) {
 
-    // Enable
+    // Enable plugin
     $settings->add(new admin_setting_configcheckbox(
         'availability_stripepayment/enabled',
         get_string('enable', 'availability_stripepayment'),
@@ -34,7 +34,7 @@ if ($hassiteconfig && isset($settings)) {
         0
     ));
 
-    // Publishable key
+    // Stripe publishable key
     $settings->add(new admin_setting_configtext(
         'availability_stripepayment/stripe_publishable_key',
         get_string('stripe_publishable_key', 'availability_stripepayment'),
@@ -43,7 +43,7 @@ if ($hassiteconfig && isset($settings)) {
         PARAM_TEXT
     ));
 
-    // Secret key
+    // Stripe secret key
     $settings->add(new admin_setting_configtext(
         'availability_stripepayment/stripe_secret_key',
         get_string('stripe_secret_key', 'availability_stripepayment'),
@@ -70,7 +70,7 @@ if ($hassiteconfig && isset($settings)) {
         PARAM_EMAIL
     ));
 
-    // Transactions link
+    // Transactions page link (SAFE - no admin tree injection)
     $transactions_url = new moodle_url('/availability/condition/stripepayment/transactions.php');
 
     $settings->add(new admin_setting_description(
@@ -81,15 +81,5 @@ if ($hassiteconfig && isset($settings)) {
             get_string('settings_transactions_link', 'availability_stripepayment'),
             ['class' => 'btn btn-primary']
         )
-    ));
-}
-
-// External report page (THIS IS OK)
-if ($hassiteconfig) {
-    $ADMIN->add('reports', new admin_externalpage(
-        'availability_stripepayment_transactions',
-        get_string('settings_transactions_admin', 'availability_stripepayment'),
-        new moodle_url('/availability/condition/stripepayment/transactions.php'),
-        'moodle/site:config'
     ));
 }

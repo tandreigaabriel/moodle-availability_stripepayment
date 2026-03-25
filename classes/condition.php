@@ -27,22 +27,24 @@ namespace availability_stripepayment;
 /**
  * Availability condition for Stripe payments.
  */
-class condition extends \core_availability\condition {
+class condition extends \core_availability\condition
+{
     /** @var float Payment amount */
-    protected $amount;
+    public $amount;
 
     /** @var string Currency code */
-    protected $currency;
+    public $currency;
 
     /** @var string Item name */
-    protected $itemname;
+    public $itemname;
 
     /**
      * Constructor.
      *
      * @param \stdClass $structure Data structure.
      */
-    public function __construct($structure) {
+    public function __construct($structure)
+    {
         if (isset($structure->amount)) {
             $this->amount = $structure->amount;
         }
@@ -59,8 +61,9 @@ class condition extends \core_availability\condition {
      *
      * @return \stdClass
      */
-    public function save() {
-        $result = (object)['type' => 'stripepayment'];
+    public function save()
+    {
+        $result = (object) ['type' => 'stripepayment'];
         if ($this->amount) {
             $result->amount = $this->amount;
         }
@@ -81,8 +84,9 @@ class condition extends \core_availability\condition {
      * @param string $itemname
      * @return \stdClass
      */
-    public static function get_json($amount, $currency, $itemname) {
-        return (object)[
+    public static function get_json($amount, $currency, $itemname)
+    {
+        return (object) [
             'type' => 'stripepayment',
             'amount' => $amount,
             'currency' => $currency,
@@ -90,7 +94,17 @@ class condition extends \core_availability\condition {
         ];
     }
 
-    public function is_available($not, \core_availability\info $info, $userid) {
+    /**
+     * Check if condition is available for a user.
+     *
+     * @param bool                    $not        True if negated.
+     * @param \core_availability\info $info       Availability info.
+     * @param bool                    $grabthelot True to grab all users.
+     * @param int                     $userid     User ID to check.
+     * @return bool
+     */
+    public function is_available($not, \core_availability\info $info, $grabthelot, $userid)
+    {
         global $DB;
 
         $allow = false;
@@ -107,11 +121,29 @@ class condition extends \core_availability\condition {
         return $allow;
     }
 
-    public function get_description($full, $not, \core_availability\info $info) {
+    /**
+     * Get description of condition for editing UI.
+     *
+     * @param bool                    $full True for full description.
+     * @param bool                    $not  True if negated.
+     * @param \core_availability\info $info Availability info.
+     * @return string
+     */
+    public function get_description($full, $not, \core_availability\info $info)
+    {
         return $this->get_either_description($not, !$full, $info);
     }
 
-    protected function get_either_description($not, $standalone, $info) {
+    /**
+     * Get the condition description for both full and standalone contexts.
+     *
+     * @param bool                    $not        True if negated.
+     * @param bool                    $standalone True when shown standalone (not in list).
+     * @param \core_availability\info $info       Availability info.
+     * @return string
+     */
+    protected function get_either_description($not, $standalone, $info)
+    {
         global $USER, $DB, $OUTPUT, $PAGE;
 
         $cm = $info->get_course_module();
@@ -119,7 +151,7 @@ class condition extends \core_availability\condition {
 
         if (
             has_capability('moodle/course:manageactivities', $context, $USER->id) ||
-                has_capability('moodle/site:config', \context_system::instance(), $USER->id)
+            has_capability('moodle/site:config', \context_system::instance(), $USER->id)
         ) {
             $reporturl = new \moodle_url('/availability/condition/stripepayment/activity_report.php', ['cmid' => $cm->id]);
             $reportlink = \html_writer::link(
@@ -137,9 +169,9 @@ class condition extends \core_availability\condition {
 
         if (
             $DB->record_exists('availability_stripepayment_payments', [
-            'userid' => $USER->id,
-            'cmid' => $cm->id,
-            'status' => 'completed',
+                'userid' => $USER->id,
+                'cmid' => $cm->id,
+                'status' => 'completed',
             ])
         ) {
             return get_string('already_paid', 'availability_stripepayment');
@@ -148,7 +180,7 @@ class condition extends \core_availability\condition {
         $formatted = $this->format_amount_for_display();
         $item = $this->itemname ?: $cm->name;
 
-        $description = get_string('payment_required_desc', 'availability_stripepayment', (object)[
+        $description = get_string('payment_required_desc', 'availability_stripepayment', (object) [
             'item' => s($item),
             'amount' => s($formatted),
             'currency' => s(strtoupper($this->currency)),
@@ -161,11 +193,11 @@ class condition extends \core_availability\condition {
 
         if ($standalone) {
             return \html_writer::tag('span', $description, ['class' => 'd-block small mb-1']) .
-                   \html_writer::link(
-                       $url,
-                       get_string('pay_now', 'availability_stripepayment'),
-                       ['class' => 'btn btn-sm btn-primary']
-                   );
+                \html_writer::link(
+                    $url,
+                    get_string('pay_now', 'availability_stripepayment'),
+                    ['class' => 'btn btn-sm btn-primary']
+                );
         }
 
         $PAGE->requires->js_call_amd('availability_stripepayment/payment', 'init');
@@ -181,8 +213,9 @@ class condition extends \core_availability\condition {
      *
      * @return string
      */
-    private function format_amount_for_display() {
-        $zd = ['JPY', 'KRW', 'VND', 'XAF', 'XOF', 'XPF'];  // zero decimal currencies
+    private function format_amount_for_display()
+    {
+        $zd = ['JPY', 'KRW', 'VND', 'XAF', 'XOF', 'XPF']; // Zero decimal currencies.
 
         $symbol = [
             'USD' => '$',
@@ -198,7 +231,13 @@ class condition extends \core_availability\condition {
         return $symbol . number_format($this->amount, 2);
     }
 
-    protected function get_debug_string() {
+    /**
+     * Get a short debug string for unit testing.
+     *
+     * @return string
+     */
+    protected function get_debug_string()
+    {
         return $this->currency . ' ' . $this->amount . ' (' . $this->itemname . ')';
     }
 }

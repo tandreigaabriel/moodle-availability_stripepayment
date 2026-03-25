@@ -29,12 +29,30 @@ namespace availability_stripepayment;
  */
 class frontend extends \core_availability\frontend {
     /**
-     * Pre-load language strings into M.str so M.util.get_string() works in JS.
+     * Pre-load language strings into M.str so M.util.get_string() works in the YUI module.
+     *
+     * Called by core_availability::include_all_javascript() for all enabled plugins.
      *
      * @return string[]
      */
     protected function get_javascript_strings() {
         return ['currency', 'amount', 'itemname'];
+    }
+
+    /**
+     * Return parameters passed to the YUI module's initInner() function.
+     *
+     * The first (and only) element is the full currency list, which the YUI
+     * module's initInner(currencies) stores and uses to build the dropdown.
+     *
+     * @param \stdClass $course Course object.
+     * @param \cm_info|null $cm Course module.
+     * @param \section_info|null $section Section info.
+     * @return array
+     */
+    protected function get_javascript_init_params($course, ?\cm_info $cm = null, ?\section_info $section = null) {
+        unset($course, $cm, $section);
+        return [\get_string_manager()->get_list_of_currencies()];
     }
 
     /**
@@ -45,7 +63,7 @@ class frontend extends \core_availability\frontend {
      * @param \section_info|null $section Section info.
      * @return bool
      */
-    protected function allow_add($course, \cm_info $cm = null, \section_info $section = null) {
+    protected function allow_add($course, ?\cm_info $cm = null, ?\section_info $section = null) {
         unset($course, $cm, $section);
 
         return true;
@@ -58,7 +76,7 @@ class frontend extends \core_availability\frontend {
      * @param \cm_info|null $cm Course module.
      * @param \section_info|null $section Section info.
      */
-    public function include_javascript($course, \cm_info $cm = null, \section_info $section = null) {
+    public function include_javascript($course, ?\cm_info $cm = null, ?\section_info $section = null) {
         global $PAGE;
 
         unset($course, $cm, $section);
