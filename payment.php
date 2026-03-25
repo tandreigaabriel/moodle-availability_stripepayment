@@ -45,36 +45,37 @@ $PAGE->set_pagelayout('incourse');
 
 require_capability('moodle/course:view', context_course::instance($cm->course));
 
-// Check if Stripe is configured
 $config = get_config('availability_stripepayment');
 if (empty($config->stripe_secret_key)) {
-    redirect(new moodle_url('/course/view.php', ['id' => $cm->course]), 
-             get_string('stripe_not_configured', 'availability_stripepayment'),
-             null, 
-             \core\output\notification::NOTIFY_ERROR);
+    redirect(
+        new moodle_url('/course/view.php', ['id' => $cm->course]),
+        get_string('stripe_not_configured', 'availability_stripepayment'),
+        null,
+        \core\output\notification::NOTIFY_ERROR
+    );
 }
 
-// Check if already paid
 if (availability_stripepayment_has_paid($USER->id, $cmid)) {
-    redirect(new moodle_url('/course/view.php', ['id' => $cm->course]),
-             get_string('already_paid', 'availability_stripepayment'),
-             null,
-             \core\output\notification::NOTIFY_SUCCESS);
+    redirect(
+        new moodle_url('/course/view.php', ['id' => $cm->course]),
+        get_string('already_paid', 'availability_stripepayment'),
+        null,
+        \core\output\notification::NOTIFY_SUCCESS
+    );
 }
 
-// Prevent duplicate Stripe sessions: if a pending record was created in the
-// last 2 minutes the user probably double-clicked or opened two tabs.
-$recent_pending = $DB->record_exists_select(
+$recentpending = $DB->record_exists_select(
     'availability_stripepayment_payments',
     'userid = :userid AND cmid = :cmid AND status = :status AND timecreated > :cutoff',
     [
         'userid' => $USER->id,
-        'cmid'   => $cmid,
+        'cmid' => $cmid,
         'status' => 'pending',
         'cutoff' => time() - 120,
     ]
 );
-if ($recent_pending) {
+
+if ($recentpending) {
     redirect(
         new moodle_url('/course/view.php', ['id' => $cm->course]),
         get_string('payment_in_progress', 'availability_stripepayment'),
@@ -83,46 +84,42 @@ if ($recent_pending) {
     );
 }
 
-// Get availability condition details
 $modinfo = get_fast_modinfo($cm->course);
 $info = new \core_availability\info_module($modinfo->get_cm($cmid));
 $tree = $info->get_availability_tree();
 
-$stripe_condition = availability_stripepayment_find_condition($tree);
-if (!$stripe_condition) {
-    redirect(new moodle_url('/course/view.php', ['id' => $cm->course]), 
-             get_string('no_condition_found', 'availability_stripepayment'),
-             null, 
-             \core\output\notification::NOTIFY_ERROR);
+$stripecondition = availability_stripepayment_find_condition($tree);
+if (!$stripecondition) {
+    redirect(
+        new moodle_url('/course/view.php', ['id' => $cm->course]),
+        get_string('no_condition_found', 'availability_stripepayment'),
+        null,
+        \core\output\notification::NOTIFY_ERROR
+    );
 }
 
-$amount = (int) $stripe_condition->amount;
-$currency = strtolower($stripe_condition->currency ?? 'usd');
-$itemname = $stripe_condition->itemname ?: $cm->name;
+$amount = (int) $stripecondition->amount;
+$currency = strtolower($stripecondition->currency ?? 'usd');
+$itemname = $stripecondition->itemname ?: $cm->name;
 
-// Validate amount
 if ($amount <= 0) {
-    redirect(new moodle_url('/course/view.php', ['id' => $cm->course]),
-             get_string('invalid_amount_admin', 'availability_stripepayment'),
-             null,
-             \core\output\notification::NOTIFY_ERROR);
+    redirect(new moodle_url('/course/view.php', ['id' => $cm->course]));
 }
 
-// Validate currency (basic 3-letter ISO check)
 if (!preg_match('/^[a-z]{3}$/', $currency)) {
-    redirect(new moodle_url('/course/view.php', ['id' => $cm->course]),
-             get_string('invalid_currency_admin', 'availability_stripepayment'),
-             null,
-             \core\output\notification::NOTIFY_ERROR);
+    redirect(new moodle_url('/course/view.php', ['id' => $cm->course]));
 }
 
-// Amount is stored in major currency units (e.g. 30 = £30.00).
-// Stripe expects the smallest unit (cents/pence), so multiply by 100 for
-// standard currencies. Zero-decimal currencies (JPY etc.) are sent as-is.
-$zero_decimal_currencies = ['BIF','CLP','DJF','GNF','JPY','KMF','KRW','MGA','PYG','RWF','UGX','VND','VUV','XAF','XOF','XPF'];
-$stripe_unit_amount = in_array(strtoupper($currency), $zero_decimal_currencies) ? $amount : $amount * 100;
+$zerodecimalcurrencies = [
+    'BIF', 'CLP', 'DJF', 'GNF', 'JPY', 'KMF',
+    'KRW', 'MGA', 'PYG', 'RWF', 'UGX',
+    'VND', 'VUV', 'XAF', 'XOF', 'XPF',
+];
 
-// Create Stripe checkout session
+$stripeunitamount = in_array(strtoupper($currency), $zerodecimalcurrencies)
+    ? $amount
+    : $amount * 100;
+
 \Stripe\Stripe::setApiKey($config->stripe_secret_key);
 
 try {
@@ -133,49 +130,40 @@ try {
                 'currency' => $currency,
                 'product_data' => [
                     'name' => $itemname,
-                    'description' => 'Access to ' . $cm->name . ' in ' . $COURSE->fullname,
                 ],
-                'unit_amount' => $stripe_unit_amount,
+                'unit_amount' => $stripeunitamount,
             ],
             'quantity' => 1,
         ]],
         'mode' => 'payment',
-        'success_url' => $CFG->wwwroot . '/availability/condition/stripepayment/success.php?session_id={CHECKOUT_SESSION_ID}&cmid=' . $cmid,
+        'success_url' => $CFG->wwwroot . '/availability/condition/stripepayment/success.php?sessionid={CHECKOUT_SESSION_ID}&cmid=' . $cmid,
         'cancel_url' => $CFG->wwwroot . '/course/view.php?id=' . $cm->course,
         'metadata' => [
             'userid' => $USER->id,
             'cmid' => $cmid,
             'courseid' => $cm->course,
-            'moodle_site' => $CFG->wwwroot,
-            'purpose' => 'assignment',
         ],
         'customer_email' => $USER->email,
     ]);
-    
-    // Save payment record
-    availability_stripepayment_create_payment($USER->id, $cmid, $cm->course, $session->id, $amount, strtoupper($currency));
-    
-    // Redirect to Stripe
+
+    availability_stripepayment_create_payment(
+        $USER->id,
+        $cmid,
+        $cm->course,
+        $session->id,
+        $amount,
+        strtoupper($currency)
+    );
+
     redirect($session->url);
-    
-} catch (\Stripe\Exception\CardException $e) {
-    error_log('Stripe card error: ' . $e->getMessage());
-    redirect(new moodle_url('/course/view.php', ['id' => $cm->course]), 
-             get_string('payment_failed_declined', 'availability_stripepayment'),
-             null, 
-             \core\output\notification::NOTIFY_ERROR);
-             
-} catch (\Stripe\Exception\InvalidRequestException $e) {
-    error_log('Stripe invalid request: ' . $e->getMessage());
-    redirect(new moodle_url('/course/view.php', ['id' => $cm->course]), 
-             get_string('payment_config_error', 'availability_stripepayment'),
-             null, 
-             \core\output\notification::NOTIFY_ERROR);
-             
+
 } catch (Exception $e) {
-    error_log('Stripe general error: ' . $e->getMessage());
-    redirect(new moodle_url('/course/view.php', ['id' => $cm->course]), 
-             get_string('payment_failed', 'availability_stripepayment'),
-             null, 
-             \core\output\notification::NOTIFY_ERROR);
+    debugging('Stripe error: ' . $e->getMessage(), DEBUG_DEVELOPER);
+
+    redirect(
+        new moodle_url('/course/view.php', ['id' => $cm->course]),
+        get_string('payment_failed', 'availability_stripepayment'),
+        null,
+        \core\output\notification::NOTIFY_ERROR
+    );
 }
