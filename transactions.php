@@ -30,7 +30,7 @@ $status = optional_param('status', '', PARAM_ALPHA);
 $perpage = optional_param('perpage', 25, PARAM_INT);
 $download = optional_param('download', '', PARAM_ALPHA);
 
-// If accessed with a course context, set up as a course report.
+// Set up page context.
 if ($courseid) {
     $course = $DB->get_record('course', ['id' => $courseid], '*', MUST_EXIST);
     $context = context_course::instance($courseid);
@@ -54,15 +54,13 @@ $PAGE->set_heading(isset($course) ? $course->fullname : get_string('transactions
 
 require_login($courseid ?: null);
 
-// Site admins use system context; course teachers use course context.
-if (
-    !has_capability('availability/stripepayment:managetransactions', context_system::instance()) &&
-    !has_capability('moodle/course:manageactivities', $context)
-) {
+// Check permissions.
+if (!has_capability('availability/stripepayment:managetransactions', context_system::instance()) &&
+        !has_capability('moodle/course:manageactivities', $context)) {
     require_capability('availability/stripepayment:managetransactions', $context);
 }
 
-// Build WHERE clause from active filters.
+// Build WHERE clause.
 $where = '1=1';
 $params = [];
 
@@ -71,51 +69,61 @@ if ($courseid) {
     $params['courseid'] = $courseid;
 }
 
-$valid_statuses = ['completed', 'pending', 'failed', 'cancelled', 'expired'];
-if ($status && in_array($status, $valid_statuses)) {
+$validstatuses = ['completed', 'pending', 'failed', 'cancelled', 'expired'];
+if ($status && in_array($status, $validstatuses)) {
     $where .= ' AND p.status = :status';
     $params['status'] = $status;
 }
 
-// Handle CSV/Excel export.
+// Handle download (CSV/Excel).
 if ($download) {
     $table = new \availability_stripepayment\transactions_table();
     $table->set_sql($table->sql->fields, $table->sql->from, $where, $params);
-    $table->is_downloading($download, 'stripe_payments_' . date('Y-m-d'), get_string('transactionsreport', 'availability_stripepayment'));
+    $table->is_downloading(
+        $download,
+        'stripe_payments_' . date('Y-m-d'),
+        get_string('transactionsreport', 'availability_stripepayment')
+    );
     $table->out($perpage, false);
     exit;
 }
 
 echo $OUTPUT->header();
 
-// Page heading row with export buttons.
+// Header with export buttons.
 echo html_writer::start_div('d-flex justify-content-between align-items-center mb-4');
 echo html_writer::tag('h2', get_string('transactionsreport', 'availability_stripepayment'), ['class' => 'mb-0 h4']);
 
 echo html_writer::start_div('d-flex gap-2');
-$export_url = new moodle_url($PAGE->url, ['download' => 'csv']);
-echo html_writer::link($export_url, '⬇ ' . get_string('downloadcsv', 'availability_stripepayment'), ['class' => 'btn btn-sm btn-outline-success']);
+
+$exporturl = new moodle_url($PAGE->url, ['download' => 'csv']);
+echo html_writer::link(
+    $exporturl,
+    '⬇ ' . get_string('downloadcsv', 'availability_stripepayment'),
+    ['class' => 'btn btn-sm btn-outline-success']
+);
 
 echo html_writer::link('https://dashboard.stripe.com/payments', '⧉ Stripe Dashboard', [
     'class' => 'btn btn-sm btn-outline-primary',
     'target' => '_blank',
 ]);
+
 echo html_writer::end_div();
 echo html_writer::end_div();
 
-// --- Filter form (Bootstrap 5) ---
-$courses_with_payments = $DB->get_records_sql(
+// Filter form.
+$courseswithpayments = $DB->get_records_sql(
     "SELECT DISTINCT c.id, c.fullname
        FROM {course} c
        JOIN {availability_stripepayment_payments} p ON p.courseid = c.id
       ORDER BY c.fullname"
 );
 
-$base_url = new moodle_url('/availability/condition/stripepayment/transactions.php');
+$baseurl = new moodle_url('/availability/condition/stripepayment/transactions.php');
 
 echo html_writer::start_tag('form', [
     'method' => 'get',
-    'action' => $base_url->out(false),
+    'action' => $baseurl->out(false),
     'class' => 'd-flex flex-wrap align-items-end gap-3 mb-4 p-3 bg-light border rounded',
 ]);
 
@@ -125,11 +133,13 @@ echo html_writer::tag('label', get_string('course', 'moodle'), [
     'for' => 'filter_courseid',
     'class' => 'form-label mb-1 small fw-semibold',
 ]);
-$course_options = [0 => get_string('allcourses', 'availability_stripepayment')];
-foreach ($courses_with_payments as $c) {
-    $course_options[$c->id] = format_string($c->fullname);
+
+$courseoptions = [0 => get_string('allcourses', 'availability_stripepayment')];
+foreach ($courseswithpayments as $c) {
+    $courseoptions[$c->id] = format_string($c->fullname);
 }
-echo html_writer::select($course_options, 'courseid', $courseid, false, [
+
+echo html_writer::select($courseoptions, 'courseid', $courseid, false, [
     'id' => 'filter_courseid',
     'class' => 'form-select form-select-sm',
     'style' => 'min-width:180px',
@@ -142,7 +152,8 @@ echo html_writer::tag('label', get_string('status'), [
     'for' => 'filter_status',
     'class' => 'form-label mb-1 small fw-semibold',
 ]);
-$status_options = [
+
+$statusoptions = [
     '' => get_string('all'),
     'completed' => get_string('completed', 'availability_stripepayment'),
     'pending' => get_string('pending', 'availability_stripepayment'),
@@ -150,7 +161,8 @@ $status_options = [
     'cancelled' => get_string('cancelled', 'availability_stripepayment'),
     'expired' => get_string('expired', 'availability_stripepayment'),
 ];
-echo html_writer::select($status_options, 'status', $status, false, [
+
+echo html_writer::select($statusoptions, 'status', $status, false, [
     'id' => 'filter_status',
     'class' => 'form-select form-select-sm',
 ]);
@@ -159,30 +171,32 @@ echo html_writer::end_div();
 // Buttons.
 echo html_writer::start_div('d-flex gap-2 align-items-end');
 echo html_writer::tag('button', get_string('filter'), ['type' => 'submit', 'class' => 'btn btn-sm btn-primary']);
-echo html_writer::link($base_url, get_string('clearfilter', 'availability_stripepayment'), ['class' => 'btn btn-sm btn-outline-secondary']);
+echo html_writer::link($baseurl, get_string('clearfilter', 'availability_stripepayment'), ['class' => 'btn btn-sm btn-outline-secondary']);
 echo html_writer::end_div();
 
 echo html_writer::end_tag('form');
 
-// Show active filter notice.
+// Active filter notice.
 if ($courseid || $status) {
     $active = [];
     if ($courseid && isset($course)) {
-        $active[] = get_string('course') . ': ' . format_string($course->fullname);
+        $active[] = get_string('course', 'moodle') . ': ' . format_string($course->fullname);
     }
     if ($status) {
         $active[] = get_string('status') . ': ' . ucfirst($status);
     }
+
     echo html_writer::div(
-        get_string('filteractive', 'availability_stripepayment') . ' ' . implode(' &bull; ', $active) . ' &mdash; ' .
-        html_writer::link($base_url, get_string('clearfilter', 'availability_stripepayment'), ['class' => 'alert-link']),
+        get_string('filteractive', 'availability_stripepayment') . ' ' .
+        implode(' &bull; ', $active) . ' &mdash; ' .
+        html_writer::link($baseurl, get_string('clearfilter', 'availability_stripepayment'), ['class' => 'alert-link']),
         'alert alert-info py-2'
     );
 }
 
+// Display table.
 $table = new \availability_stripepayment\transactions_table();
 $table->set_sql($table->sql->fields, $table->sql->from, $where, $params);
-
 $table->out($perpage, true);
 
 if ($table->totalrows) {
@@ -193,10 +207,12 @@ if ($table->totalrows) {
 
     echo html_writer::start_div('my-3 d-flex justify-content-between align-items-center');
     echo $OUTPUT->single_select($PAGE->url, 'perpage', $options, $perpage, null, 'perpageform');
+
     echo html_writer::div(
         $table->totalrows . ' ' . get_string('payments', 'availability_stripepayment'),
         'text-muted small'
     );
+
     echo html_writer::end_div();
 }
 
