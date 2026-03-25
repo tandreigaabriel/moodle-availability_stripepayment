@@ -5,6 +5,14 @@
 // it under the terms of the GNU General Public License as published by
 // the Free Software Foundation, either version 3 of the License, or
 // (at your option) any later version.
+//
+// Moodle is distributed in the hope that it will be useful,
+// but WITHOUT ANY WARRANTY; without even the implied warranty of
+// MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+// GNU General Public License for more details.
+//
+// You should have received a copy of the GNU General Public License
+// along with Moodle.  If not, see <https://www.gnu.org/licenses/>.
 
 /**
  * Stripe webhook endpoint — processes checkout.session.completed events.
@@ -14,25 +22,24 @@
  * @license    https://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
  */
 
-// Core Moodle bootstrap constants (required before config.php).
-// These are core constants, not plugin-defined, so Frankenstyle does not apply.
+// Core Moodle bootstrap constants (required before config.php)
 define('NO_MOODLE_COOKIES', true);
 define('NO_DEBUG_DISPLAY', true);
 define('NO_UPGRADE_CHECK', true);
 
-require_once('../../../config.php');
+require(__DIR__ . '/../../../config.php');
 require_once(__DIR__ . '/vendor/autoload.php');
 require_once(__DIR__ . '/lib.php');
 
 global $DB;
 
-// Only POST requests allowed
+// Only POST requests allowed.
 if ($_SERVER['REQUEST_METHOD'] !== 'POST') {
     http_response_code(405);
     exit(get_string('webhook_method_not_allowed', 'availability_stripepayment'));
 }
 
-// Read raw payload
+// Read raw payload.
 $payload = file_get_contents('php://input');
 
 if (!$payload) {
@@ -40,7 +47,7 @@ if (!$payload) {
     exit(get_string('webhook_empty_payload', 'availability_stripepayment'));
 }
 
-// Ensure Stripe signature header exists
+// Ensure Stripe signature header exists.
 if (!isset($_SERVER['HTTP_STRIPE_SIGNATURE'])) {
     http_response_code(400);
     exit(get_string('webhook_missing_signature', 'availability_stripepayment'));
@@ -73,25 +80,18 @@ if (empty($config->webhook_secret)) {
 // against unauthorized access.
 
 try {
-
     $event = \Stripe\Webhook::constructEvent(
         $payload,
         $sigheader,
         $config->webhook_secret
     );
-
 } catch (\UnexpectedValueException $e) {
-
     http_response_code(400);
     exit(get_string('webhook_invalid_payload', 'availability_stripepayment'));
-
 } catch (\Stripe\Exception\SignatureVerificationException $e) {
-
     http_response_code(400);
     exit(get_string('webhook_invalid_signature', 'availability_stripepayment'));
-
 } catch (Exception $e) {
-
     debugging('[availability_stripepayment] Webhook exception: ' . $e->getMessage(), DEBUG_DEVELOPER);
     http_response_code(400);
     exit(get_string('webhook_error', 'availability_stripepayment'));
@@ -102,9 +102,7 @@ try {
 // ------------------------------------------------------
 
 try {
-
     if ($event->type === 'checkout.session.completed') {
-
         $session = $event->data->object;
 
         // Basic payload validation
@@ -115,22 +113,20 @@ try {
 
         // Ensure payment actually succeeded
         if ($session->payment_status !== 'paid') {
-
             http_response_code(200);
             echo json_encode([
                 'status' => 'ignored',
-                'reason' => get_string('webhook_payment_not_completed', 'availability_stripepayment')
+                'reason' => get_string('webhook_payment_not_completed', 'availability_stripepayment'),
             ]);
             exit;
         }
 
         // Find payment record
         $payment = $DB->get_record('availability_stripepayment_payments', [
-            'stripe_session_id' => $session->id
+            'stripe_session_id' => $session->id,
         ]);
 
         if (!$payment || empty($payment->courseid)) {
-
             debugging(
                 '[availability_stripepayment] Payment record not found or invalid for session: ' . $session->id,
                 DEBUG_DEVELOPER
@@ -139,18 +135,17 @@ try {
             http_response_code(200);
             echo json_encode([
                 'status' => get_string('status_ok', 'availability_stripepayment'),
-                'note' => get_string('payment_not_found', 'availability_stripepayment')
+                'note' => get_string('payment_not_found', 'availability_stripepayment'),
             ]);
             exit;
         }
 
         // Prevent duplicate processing
         if ($payment->status === 'completed') {
-
             http_response_code(200);
             echo json_encode([
                 'status' => get_string('status_ok', 'availability_stripepayment'),
-                'note' => get_string('webhook_already_processed', 'availability_stripepayment')
+                'note' => get_string('webhook_already_processed', 'availability_stripepayment'),
             ]);
             exit;
         }
@@ -167,12 +162,9 @@ try {
 
         // Clear course module cache so activity unlocks immediately
         try {
-
             $cache = \cache::make('core', 'coursemodinfo');
             $cache->delete($payment->courseid);
-
         } catch (Exception $e) {
-
             debugging(
                 '[availability_stripepayment] Cache clear error: ' . $e->getMessage(),
                 DEBUG_DEVELOPER
@@ -181,13 +173,10 @@ try {
 
         // Send notifications if implemented
         if (function_exists('availability_stripepayment_send_payment_notifications')) {
-
             availability_stripepayment_send_payment_notifications($payment, $session);
         }
     }
-
 } catch (Exception $e) {
-
     debugging(
         '[availability_stripepayment] Processing error: ' . $e->getMessage(),
         DEBUG_DEVELOPER
@@ -201,6 +190,6 @@ try {
 http_response_code(200);
 echo json_encode([
     'status' => get_string('status_ok', 'availability_stripepayment'),
-    'note' => get_string('webhook_already_processed', 'availability_stripepayment')
+    'note' => get_string('webhook_already_processed', 'availability_stripepayment'),
 ]);
 exit;
