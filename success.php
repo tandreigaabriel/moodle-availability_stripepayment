@@ -77,12 +77,7 @@ if ($payment->status !== 'completed') {
                 $DB->update_record('availability_stripepayment_payments', $payment);
 
                 // Clear course modinfo cache.
-                try {
-                    $cache = \cache::make('core', 'coursemodinfo');
-                    $cache->delete($payment->courseid);
-                } catch (\Exception $e) {
-                    debugging('Cache clear failed: ' . $e->getMessage(), DEBUG_DEVELOPER);
-                }
+                rebuild_course_cache($payment->courseid, true);
 
                 availability_stripepayment_send_payment_notifications($payment, $stripesession);
             }
