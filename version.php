@@ -18,7 +18,7 @@
  * Version information for the Stripe availability condition.
  *
  * @package    availability_stripepayment
- * @version    1.2.0
+ * @version    1.3.6
  * @author     Andrei Toma
  * @authorurl  https://www.tagwebdesign.co.uk
  * @donate     https://www.paypal.com/donate/?hosted_button_id=YZCJJMZVMN53E
@@ -29,8 +29,8 @@
 defined('MOODLE_INTERNAL') || die();
 
 $plugin->component = 'availability_stripepayment';
-$plugin->version = 2026032105;
+$plugin->version = 2026032500;
 $plugin->requires = 2024042200; // Moodle 4.5+
 $plugin->supported = [405, 500];
 $plugin->maturity = MATURITY_STABLE;
-$plugin->release = '1.3.2';
+$plugin->release = '1.3.6';

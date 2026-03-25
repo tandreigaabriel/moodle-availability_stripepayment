@@ -180,6 +180,24 @@ Use Stripe's test card numbers while your plugin is in test mode:
 
 Use any future expiry date, any 3-digit CVC, and any postcode.
 
+### Testing email notifications
+
+The plugin sends an internal notification email to your accounts team after every completed payment. To test this:
+
+1. Make sure the **Accounts email** field is filled in under **Site Administration → Plugins → Availability restrictions → Stripe Payment**
+   - If left blank, the plugin falls back to `accounts@yourmoodledomain.com`
+2. Complete a test payment using a Stripe test card (see table above)
+3. Check the inbox of the configured accounts email address — you should receive a branded HTML email containing:
+   - Student name and email address
+   - Activity name and course name
+   - Amount and currency
+   - Stripe session ID
+   - Payment date and time
+
+> **Note:** Moodle must be configured to send outgoing email. Verify this under **Site Administration → Server → Email → Outgoing mail configuration**. You can use the **Send a test message** button on that page to confirm delivery before testing payments.
+
+> **Note:** The accounts email address must belong to a registered Moodle user. If no Moodle user account matches the address, the notification is sent to the site admin instead.
+
 ---
 
 ## Troubleshooting
@@ -255,6 +273,15 @@ Copyright &copy; 2025 Andrei Toma — [tagwebdesign.co.uk](https://www.tagwebdes
 
 ## Changelog
 
+### 1.3.6
+
+- Fixed `classes/hook/output/before_http_headers.php` incorrectly extending the final core hook class `\core\hook\output\before_http_headers` — caused a PHP fatal error on every request, silently preventing redirects (e.g. the Save button on `admin/upgradesettings.php` did nothing)
+- Removed the now-redundant hook callback registration from `db/hooks.php` — the callback was intentionally empty as Moodle loads plugin CSS automatically
+- Fixed CSV export in the site-wide transactions report downloading Bootstrap HTML summary card markup alongside data rows — added an `is_downloading()` early-return guard to the `start_output()` override in `classes/transactions_table.php`
+- Fixed Moodle debugging warning "name fields missing from user object" on the per-activity report — added `firstnamephonetic`, `lastnamephonetic`, `middlename`, and `alternatename` to the SQL query in `activity_report.php` so `fullname()` has all required fields
+- Fixed PHPCS violations: renamed `$transactions_url` → `$transactionsurl` in `settings.php`; corrected Allman-style opening braces to K&R style across all methods in `classes/condition.php`; removed trailing whitespace, fixed overlong line, and removed blank line before `catch` in `payment.php`
+- Replaced all hard-coded English strings in `lib.php` (`send_payment_notifications`) and `transactions.php` with `get_string()` calls; added corresponding entries to `lang/en/availability_stripepayment.php`
+
 ### 1.3.5
 
 - Migrated availability condition form editor from legacy YUI to an AMD ES6 module (`amd/src/form.js`) — `frontend.php` now overrides `include_javascript()` and loads via `js_call_amd()`, removing the YUI dependency from the teacher-facing form UI
@@ -283,6 +310,16 @@ Copyright &copy; 2025 Andrei Toma — [tagwebdesign.co.uk](https://www.tagwebdes
 - Fixed language strings
 - Improved CSS namespacing
 - Added third-party library documentation
+
+### 1.3.1
+
+- Fixed currency formatting edge cases for zero-decimal currencies in payment and report pages
+- Fixed currency code normalisation — values are now consistently stored and displayed in uppercase
+
+### 1.3.0
+
+- Added support for additional currencies including all Stripe-supported zero-decimal currencies (BIF, CLP, DJF, GNF, JPY, KMF, KRW, MGA, PYG, RWF, UGX, VND, VUV, XAF, XOF, XPF)
+- Added Stripe test mode detection — transaction links in the admin report automatically point to the correct Stripe test or live dashboard URL based on the session ID prefix (`cs_test_` vs `cs_`)
 
 ### 1.2.0
 
