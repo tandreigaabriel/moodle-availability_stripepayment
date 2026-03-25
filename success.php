@@ -60,7 +60,7 @@ if (!$cm) {
 
 $context = context_course::instance($payment->courseid);
 $PAGE->set_context($context);
-require_capability('moodle/course:view', $context);
+require_course_login($payment->courseid);
 
 // Stripe verification fallback (if status is not yet completed).
 if ($payment->status !== 'completed') {
