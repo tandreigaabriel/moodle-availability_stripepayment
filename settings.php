@@ -69,11 +69,15 @@ if ($hassiteconfig && isset($settings)) {
         PARAM_EMAIL
     ));
 
-    // Transactions page.
+    // Transactions page
+    $transactionsurl = new moodle_url('/availability/condition/stripepayment/transactions.php');
     $settings->add(new admin_setting_description(
         'availability_stripepayment/transactions_link',
         get_string('settings_transactions_heading', 'availability_stripepayment'),
-        '<a href="' . $CFG->wwwroot . '/availability/condition/stripepayment/transactions.php" class="btn btn-primary">'
-            . get_string('settings_transactions_link', 'availability_stripepayment') . '</a>'
+        html_writer::link(
+            $transactionsurl,
+            get_string('settings_transactions_link', 'availability_stripepayment'),
+            ['class' => 'btn btn-primary']
+        )
     ));
 }
