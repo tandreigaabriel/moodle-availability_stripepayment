@@ -54,7 +54,8 @@ $revenuerows = $DB->get_records_sql(
 // --- All payments for this activity ---
 $payments = $DB->get_records_sql(
     "SELECT p.id, p.userid, p.amount, p.currency, p.status, p.timecreated,
-            u.firstname, u.lastname, u.email
+            u.firstname, u.lastname, u.email,
+            u.firstnamephonetic, u.lastnamephonetic, u.middlename, u.alternatename
        FROM {availability_stripepayment_payments} p
        JOIN {user} u ON p.userid = u.id
       WHERE p.cmid = :cmid
