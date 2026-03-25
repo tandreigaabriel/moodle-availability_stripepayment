@@ -43,7 +43,7 @@ require_capability('moodle/course:manageactivities', $context);
 $completed = $DB->count_records('availability_stripepayment_payments', ['cmid' => $cmid, 'status' => 'completed']);
 $pending   = $DB->count_records('availability_stripepayment_payments', ['cmid' => $cmid, 'status' => 'pending']);
 
-$revenue_rows = $DB->get_records_sql(
+$revenuerows = $DB->get_records_sql(
     "SELECT currency, SUM(amount) AS total
        FROM {availability_stripepayment_payments}
       WHERE cmid = :cmid AND status = 'completed'
@@ -62,7 +62,7 @@ $payments = $DB->get_records_sql(
     ['cmid' => $cmid]
 );
 
-$zero_decimal = ['BIF', 'CLP', 'DJF', 'GNF', 'JPY', 'KMF', 'KRW', 'MGA', 'PYG', 'RWF', 'UGX', 'VND', 'VUV', 'XAF', 'XOF', 'XPF'];
+$zerodecimal = ['BIF', 'CLP', 'DJF', 'GNF', 'JPY', 'KMF', 'KRW', 'MGA', 'PYG', 'RWF', 'UGX', 'VND', 'VUV', 'XAF', 'XOF', 'XPF'];
 
 echo $OUTPUT->header();
 
@@ -96,8 +96,8 @@ echo html_writer::end_div();
 echo html_writer::end_div();
 echo html_writer::end_div();
 
-foreach ($revenue_rows as $rev) {
-    $decimals = in_array(strtoupper($rev->currency), $zero_decimal) ? 0 : 2;
+foreach ($revenuerows as $rev) {
+    $decimals = in_array(strtoupper($rev->currency), $zerodecimal) ? 0 : 2;
     echo html_writer::start_div('col-sm-6 col-lg-4');
     echo html_writer::start_div('card h-100 border-warning');
     echo html_writer::div(
@@ -131,7 +131,7 @@ if ($payments) {
     foreach ($payments as $p) {
         $profileurl = new moodle_url('/user/view.php', ['id' => $p->userid, 'course' => $course->id]);
         $name       = html_writer::link($profileurl, fullname($p));
-        $decimals   = in_array(strtoupper($p->currency), $zero_decimal) ? 0 : 2;
+        $decimals   = in_array(strtoupper($p->currency), $zerodecimal) ? 0 : 2;
 
         // Bootstrap 5 badge classes.
         switch ($p->status) {
