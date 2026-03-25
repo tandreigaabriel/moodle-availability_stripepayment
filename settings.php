@@ -25,7 +25,6 @@
 defined('MOODLE_INTERNAL') || die();
 
 if ($hassiteconfig && isset($settings)) {
-
     // Enable plugin
     $settings->add(new admin_setting_configcheckbox(
         'availability_stripepayment/enabled',
@@ -72,7 +71,6 @@ if ($hassiteconfig && isset($settings)) {
 
     // Transactions page link (SAFE - no admin tree injection)
     $transactions_url = new moodle_url('/availability/condition/stripepayment/transactions.php');
-
     $settings->add(new admin_setting_description(
         'availability_stripepayment/transactions_link',
         get_string('settings_transactions_heading', 'availability_stripepayment'),
