@@ -55,8 +55,10 @@ $PAGE->set_heading(isset($course) ? $course->fullname : get_string('transactions
 require_login($courseid ?: null);
 
 // Check permissions.
-if (!has_capability('availability/stripepayment:managetransactions', context_system::instance()) &&
-        !has_capability('moodle/course:manageactivities', $context)) {
+if (
+    !has_capability('availability/stripepayment:managetransactions', context_system::instance()) &&
+        !has_capability('moodle/course:manageactivities', $context)
+) {
     require_capability('availability/stripepayment:managetransactions', $context);
 }
 
@@ -186,14 +188,16 @@ if ($courseid || $status) {
         $active[] = get_string('status') . ': ' . ucfirst($status);
     }
 
-    echo html_writer::div(
-        get_string('filteractive', 'availability_stripepayment') . ' ' .
-        implode(' &bull; ', $active) . ' &mdash; ' .
-        html_writer::link($baseurl, get_string('clearfilter', 'availability_stripepayment'),
-            ['class' => 'alert-link']
-        ),
-        'alert alert-info py-2'
+    $link = html_writer::link(
+        $baseurl,
+        get_string('clearfilter', 'availability_stripepayment'),
+        ['class' => 'alert-link']
     );
+
+    $filtertext = get_string('filteractive', 'availability_stripepayment') . ' ' .
+                  implode(' &bull; ', $active) . ' &mdash; ' . $link;
+
+    echo html_writer::div($filtertext, 'alert alert-info py-2');
 }
 
 // Display table.
