@@ -23,14 +23,11 @@ namespace availability_stripepayment;
  * @copyright   2025 Andrei Toma <https://www.tagwebdesign.co.uk>
  * @license     https://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
  */
-class transactions_table extends \table_sql
-{
-
+class transactions_table extends \table_sql {
     /**
      * Table setup.
      */
-    public function __construct()
-    {
+    public function __construct() {
         global $PAGE;
 
         parent::__construct('availability_stripepayment-transactions');
@@ -89,8 +86,7 @@ class transactions_table extends \table_sql
      * @param object $data Row data from the report query.
      * @return string Activity name, or localised "unknown activity" string.
      */
-    private function get_activity_name($data): string
-    {
+    private function get_activity_name($data): string {
         global $DB;
 
         if (!empty($data->modname_raw) && !empty($data->cm_instance)) {
@@ -99,8 +95,9 @@ class transactions_table extends \table_sql
                 if ($name !== false && $name !== '') {
                     return $name;
                 }
-            } catch (\Exception $e) {
+            } catch (\Exception $ex) {
                 // Table may not exist for an uninstalled module — fall through.
+                debugging('availability_stripepayment: module table lookup failed: ' . $ex->getMessage(), DEBUG_DEVELOPER);
             }
         }
 
@@ -113,15 +110,14 @@ class transactions_table extends \table_sql
      * @param object $data Row data.
      * @return string Formatted cell content.
      */
-    public function col_item($data)
-    {
+    public function col_item($data) {
         global $PAGE;
 
-        $item_name = $this->get_activity_name($data);
-        $course_part = $data->course_shortname . ' / ';
+        $itemname = $this->get_activity_name($data);
+        $coursepart = $data->course_shortname . ' / ';
 
         if ($this->is_downloading()) {
-            return $course_part . $item_name;
+            return $coursepart . $itemname;
         }
 
         $itemclass = '';
@@ -132,12 +128,12 @@ class transactions_table extends \table_sql
         $modname = $data->modname_raw ?? '';
         if ($modname && $data->cmid) {
             $url = new \moodle_url('/mod/' . $modname . '/view.php', ['id' => $data->cmid]);
-            $link = \html_writer::link($url, $item_name);
+            $link = \html_writer::link($url, $itemname);
         } else {
-            $link = $item_name;
+            $link = $itemname;
         }
 
-        return \html_writer::span($course_part . $link, $itemclass);
+        return \html_writer::span($coursepart . $link, $itemclass);
     }
 
     /**
@@ -146,8 +142,7 @@ class transactions_table extends \table_sql
      * @param object $data Row data.
      * @return string Formatted cell content.
      */
-    public function col_fullname($data)
-    {
+    public function col_fullname($data) {
         global $PAGE;
 
         $name = fullname($data);
@@ -171,10 +166,9 @@ class transactions_table extends \table_sql
      * @param object $data Row data.
      * @return string Formatted amount.
      */
-    public function col_amount($data)
-    {
-        $zero_decimal = ['BIF', 'CLP', 'DJF', 'GNF', 'JPY', 'KMF', 'KRW', 'MGA', 'PYG', 'RWF', 'UGX', 'VND', 'VUV', 'XAF', 'XOF', 'XPF'];
-        $decimals = in_array(strtoupper($data->currency), $zero_decimal) ? 0 : 2;
+    public function col_amount($data) {
+        $zerodecimal = ['BIF', 'CLP', 'DJF', 'GNF', 'JPY', 'KMF', 'KRW', 'MGA', 'PYG', 'RWF', 'UGX', 'VND', 'VUV', 'XAF', 'XOF', 'XPF'];
+        $decimals = in_array(strtoupper($data->currency), $zerodecimal) ? 0 : 2;
         return number_format($data->amount, $decimals);
     }
 
@@ -184,8 +178,7 @@ class transactions_table extends \table_sql
      * @param object $data Row data.
      * @return string Uppercase currency code.
      */
-    public function col_currency($data)
-    {
+    public function col_currency($data) {
         return strtoupper($data->currency);
     }
 
@@ -195,8 +188,7 @@ class transactions_table extends \table_sql
      * @param object $data Row data.
      * @return string Formatted status badge or plain text.
      */
-    public function col_status($data)
-    {
+    public function col_status($data) {
         if ($this->is_downloading()) {
             return ucfirst($data->status);
         }
@@ -225,8 +217,7 @@ class transactions_table extends \table_sql
      * @param object $data Row data.
      * @return string Formatted session ID or dash if empty.
      */
-    public function col_stripe_session_id($data)
-    {
+    public function col_stripe_session_id($data) {
         if (empty($data->stripe_session_id)) {
             return '-';
         }
@@ -235,7 +226,7 @@ class transactions_table extends \table_sql
             return $data->stripe_session_id;
         }
 
-        $short_id = substr($data->stripe_session_id, 0, 8) . '…' . substr($data->stripe_session_id, -8);
+        $shortid = substr($data->stripe_session_id, 0, 8) . '…' . substr($data->stripe_session_id, -8);
 
         $copybutton = \html_writer::tag('button', '📋', [
             'class' => 'btn btn-sm btn-outline-secondary ms-1',
@@ -244,7 +235,7 @@ class transactions_table extends \table_sql
             'type' => 'button',
         ]);
 
-        return \html_writer::span($short_id, 'font-monospace', ['title' => $data->stripe_session_id]) . $copybutton;
+        return \html_writer::span($shortid, 'font-monospace', ['title' => $data->stripe_session_id]) . $copybutton;
     }
 
     /**
@@ -253,8 +244,7 @@ class transactions_table extends \table_sql
      * @param object $data Row data.
      * @return string Formatted date/time string.
      */
-    public function col_timecreated($data)
-    {
+    public function col_timecreated($data) {
         return userdate($data->timecreated, get_string('strftimedatetime', 'langconfig'));
     }
 
@@ -264,30 +254,29 @@ class transactions_table extends \table_sql
      * @param object $data Row data.
      * @return string Link HTML or plain URL string.
      */
-    public function col_stripe_link($data)
-    {
+    public function col_stripe_link($data) {
         if (empty($data->stripe_session_id)) {
             return '-';
         }
 
-        $is_test = strpos($data->stripe_session_id, 'cs_test_') === 0;
+        $istest = strpos($data->stripe_session_id, 'cs_test_') === 0;
 
         if (strpos($data->stripe_session_id, 'cs_') === 0) {
-            $stripe_url = $is_test
+            $stripeurl = $istest
                 ? 'https://dashboard.stripe.com/test/checkout/sessions/' . $data->stripe_session_id
                 : 'https://dashboard.stripe.com/checkout/sessions/' . $data->stripe_session_id;
         } else {
-            $base = $is_test
+            $base = $istest
                 ? 'https://dashboard.stripe.com/test/payments/'
                 : 'https://dashboard.stripe.com/payments/';
-            $stripe_url = $base . $data->stripe_session_id;
+            $stripeurl = $base . $data->stripe_session_id;
         }
 
         if ($this->is_downloading()) {
-            return $stripe_url;
+            return $stripeurl;
         }
 
-        return \html_writer::link($stripe_url, '🔗 Stripe', [
+        return \html_writer::link($stripeurl, '🔗 Stripe', [
             'target' => '_blank',
             'class' => 'btn btn-sm btn-outline-primary',
             'title' => get_string('viewinstripe', 'availability_stripepayment'),
@@ -299,15 +288,14 @@ class transactions_table extends \table_sql
      *
      * @return void
      */
-    public function start_output()
-    {
+    public function start_output() {
         global $DB;
 
-        $total_payments = $DB->count_records('availability_stripepayment_payments');
-        $completed_payments = $DB->count_records('availability_stripepayment_payments', ['status' => 'completed']);
-        $pending_payments = $DB->count_records('availability_stripepayment_payments', ['status' => 'pending']);
+        $totalpayments = $DB->count_records('availability_stripepayment_payments');
+        $completedpayments = $DB->count_records('availability_stripepayment_payments', ['status' => 'completed']);
+        $pendingpayments = $DB->count_records('availability_stripepayment_payments', ['status' => 'pending']);
 
-        $revenue_rows = $DB->get_records_sql(
+        $revenuerows = $DB->get_records_sql(
             "SELECT currency, SUM(amount) AS total
                FROM {availability_stripepayment_payments}
               WHERE status = 'completed'
@@ -315,7 +303,7 @@ class transactions_table extends \table_sql
               ORDER BY currency"
         );
 
-        $zero_decimal = ['BIF', 'CLP', 'DJF', 'GNF', 'JPY', 'KMF', 'KRW', 'MGA', 'PYG', 'RWF', 'UGX', 'VND', 'VUV', 'XAF', 'XOF', 'XPF'];
+        $zerodecimal = ['BIF', 'CLP', 'DJF', 'GNF', 'JPY', 'KMF', 'KRW', 'MGA', 'PYG', 'RWF', 'UGX', 'VND', 'VUV', 'XAF', 'XOF', 'XPF'];
 
         // Row 1: three metric cards (always equal thirds).
         echo \html_writer::start_div('row g-3 mb-3');
@@ -325,7 +313,7 @@ class transactions_table extends \table_sql
         echo \html_writer::start_div('card h-100 border-primary');
         echo \html_writer::div(get_string('totalpayments', 'availability_stripepayment'), 'card-header bg-primary text-white fw-semibold');
         echo \html_writer::start_div('card-body text-center');
-        echo \html_writer::tag('h3', $total_payments, ['class' => 'card-title text-primary mb-0']);
+        echo \html_writer::tag('h3', $totalpayments, ['class' => 'card-title text-primary mb-0']);
         echo \html_writer::end_div();
         echo \html_writer::end_div();
         echo \html_writer::end_div();
@@ -335,7 +323,7 @@ class transactions_table extends \table_sql
         echo \html_writer::start_div('card h-100 border-success');
         echo \html_writer::div(get_string('completed', 'availability_stripepayment'), 'card-header bg-success text-white fw-semibold');
         echo \html_writer::start_div('card-body text-center');
-        echo \html_writer::tag('h3', $completed_payments, ['class' => 'card-title text-success mb-0']);
+        echo \html_writer::tag('h3', $completedpayments, ['class' => 'card-title text-success mb-0']);
         echo \html_writer::end_div();
         echo \html_writer::end_div();
         echo \html_writer::end_div();
@@ -345,7 +333,7 @@ class transactions_table extends \table_sql
         echo \html_writer::start_div('card h-100 border-info');
         echo \html_writer::div(get_string('pending', 'availability_stripepayment'), 'card-header bg-info text-dark fw-semibold');
         echo \html_writer::start_div('card-body text-center');
-        echo \html_writer::tag('h3', $pending_payments, ['class' => 'card-title text-info mb-0']);
+        echo \html_writer::tag('h3', $pendingpayments, ['class' => 'card-title text-info mb-0']);
         echo \html_writer::end_div();
         echo \html_writer::end_div();
         echo \html_writer::end_div();
@@ -359,11 +347,11 @@ class transactions_table extends \table_sql
         echo \html_writer::div(get_string('totalrevenue', 'availability_stripepayment'), 'card-header bg-warning text-dark fw-semibold');
         echo \html_writer::start_div('card-body py-2');
 
-        if ($revenue_rows) {
+        if ($revenuerows) {
             echo \html_writer::start_tag('ul', ['class' => 'list-unstyled d-flex flex-wrap gap-4 mb-0']);
-            foreach ($revenue_rows as $rev) {
+            foreach ($revenuerows as $rev) {
                 $currency = strtoupper($rev->currency);
-                $decimals = in_array($currency, $zero_decimal) ? 0 : 2;
+                $decimals = in_array($currency, $zerodecimal) ? 0 : 2;
                 $amount = number_format($rev->total, $decimals);
                 echo \html_writer::tag(
                     'li',
