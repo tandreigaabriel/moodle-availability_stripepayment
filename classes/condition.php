@@ -8,32 +8,52 @@
 //
 // Moodle is distributed in the hope that it will be useful,
 // but WITHOUT ANY WARRANTY; without even the implied warranty of
-// MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+// MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
 // GNU General Public License for more details.
 //
 // You should have received a copy of the GNU General Public License
-// along with Moodle.  If not, see <https://www.gnu.org/licenses/>.
+// along with Moodle. If not, see <https://www.gnu.org/licenses/>.
 
 /**
  * Stripe payment availability condition.
  *
  * @package    availability_stripepayment
- * @copyright  2025 Andrei Toma <https://www.tagwebdesign.co.uk>
+ * @copyright  2025 Andrei Toma
  * @license    https://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
  */
 
 namespace availability_stripepayment;
 
-defined('MOODLE_INTERNAL') || die();
-
+/**
+ * Availability condition for Stripe payments.
+ */
 class condition extends \core_availability\condition {
 
-    public $amount;
-    public $currency;
-    public $itemname;
+    /**
+     * Payment amount.
+     *
+     * @var float
+     */
+    protected $amount;
 
     /**
-     * Constructor
+     * Currency code.
+     *
+     * @var string
+     */
+    protected $currency;
+
+    /**
+     * Item name.
+     *
+     * @var string
+     */
+    protected $itemname;
+
+    /**
+     * Constructor.
+     *
+     * @param \stdClass $structure Data structure.
      */
     public function __construct($structure) {
         if (isset($structure->amount)) {
@@ -48,10 +68,13 @@ class condition extends \core_availability\condition {
     }
 
     /**
-     * Saves tree data back to a structure object
+     * Save condition data.
+     *
+     * @return \stdClass
      */
     public function save() {
-        $result = (object)array('type' => 'stripepayment');
+        $result = (object)['type' => 'stripepayment'];
+
         if ($this->amount) {
             $result->amount = $this->amount;
         }
@@ -61,34 +84,45 @@ class condition extends \core_availability\condition {
         if ($this->itemname) {
             $result->itemname = $this->itemname;
         }
+
         return $result;
     }
 
     /**
-     * Returns a JSON object which corresponds to a condition of this type
+     * Get JSON structure.
+     *
+     * @param float  $amount
+     * @param string $currency
+     * @param string $itemname
+     * @return \stdClass
      */
     public static function get_json($amount, $currency, $itemname) {
-        return (object)['type' => 'stripepayment', 'amount' => $amount, 'currency' => $currency, 'itemname' => $itemname];
+        return (object)[
+            'type' => 'stripepayment',
+            'amount' => $amount,
+            'currency' => $currency,
+            'itemname' => $itemname,
+        ];
     }
 
     /**
-     * Determines whether a particular item is currently available
+     * Check availability.
+     *
+     * @param bool $not
+     * @param \core_availability\info $info
+     * @param bool $grabthelot
+     * @param int $userid
+     * @return bool
      */
     public function is_available($not, \core_availability\info $info, $grabthelot, $userid) {
         global $DB;
 
         $allow = false;
 
-        if (is_a($info, '\core_availability\info_module')) {
-            // Do NOT short-circuit for teachers/admins here.
-            // Moodle core already grants access to users with moodle/course:ignorefileconditions
-            // via core_availability\info::is_available() — that bypass is independent of this
-            // method. Returning true here would prevent get_description() from being called for
-            // teachers, which means the "View payment report" link would never appear on the
-            // course page.
+        if ($info instanceof \core_availability\info_module) {
             $allow = $DB->record_exists('availability_stripepayment_payments', [
                 'userid' => $userid,
-                'cmid'   => $info->get_course_module()->id,
+                'cmid' => $info->get_course_module()->id,
                 'status' => 'completed',
             ]);
         }
@@ -101,61 +135,77 @@ class condition extends \core_availability\condition {
     }
 
     /**
-     * Obtains a string describing this restriction
+     * Get description.
+     *
+     * @param bool $full
+     * @param bool $not
+     * @param \core_availability\info $info
+     * @return string
      */
     public function get_description($full, $not, \core_availability\info $info) {
         return $this->get_either_description($not, !$full, $info);
     }
 
+    /**
+     * Build description output.
+     *
+     * @param bool $not
+     * @param bool $standalone
+     * @param \core_availability\info $info
+     * @return string
+     */
     protected function get_either_description($not, $standalone, $info) {
         global $USER, $DB, $OUTPUT, $PAGE;
 
-        $cm      = $info->get_course_module();
+        $cm = $info->get_course_module();
         $context = $info->get_context();
 
-        // Admins and teachers do not need a payment prompt — show a report link instead.
-        if (has_capability('moodle/course:manageactivities', $context, $USER->id) ||
-            has_capability('moodle/site:config', \context_system::instance(), $USER->id)) {
-            $report_url  = new \moodle_url('/availability/condition/stripepayment/activity_report.php', ['cmid' => $cm->id]);
-            $report_link = \html_writer::link(
-                $report_url,
+        if (
+            has_capability('moodle/course:manageactivities', $context, $USER->id) ||
+            has_capability('moodle/site:config', \context_system::instance(), $USER->id)
+        ) {
+            $reportUrl = new \moodle_url(
+                '/availability/condition/stripepayment/activity_report.php',
+                ['cmid' => $cm->id]
+            );
+
+            $reportLink = \html_writer::link(
+                $reportUrl,
                 get_string('activitypaymentreport', 'availability_stripepayment'),
                 ['class' => 'btn btn-sm btn-outline-info ms-2']
             );
-            return get_string('already_paid', 'availability_stripepayment') . ' ' . $report_link;
+
+            return get_string('already_paid', 'availability_stripepayment') . ' ' . $reportLink;
         }
 
         if ($not) {
             return get_string('not_paid', 'availability_stripepayment');
         }
 
-        // Check if user has already paid.
-        $has_paid = $DB->record_exists('availability_stripepayment_payments', [
+        $hasPaid = $DB->record_exists('availability_stripepayment_payments', [
             'userid' => $USER->id,
-            'cmid'   => $cm->id,
+            'cmid' => $cm->id,
             'status' => 'completed',
         ]);
 
-        if ($has_paid) {
+        if ($hasPaid) {
             return get_string('already_paid', 'availability_stripepayment');
         }
 
-        $formatted_amount = $this->format_amount_for_display();
-        $item_name        = $this->itemname ?: $cm->name;
-        $description      = get_string('payment_required_desc', 'availability_stripepayment', (object)[
-            'item'     => s($item_name),
-            'amount'   => s($formatted_amount),
+        $formattedAmount = $this->format_amount_for_display();
+        $itemName = $this->itemname ?: $cm->name;
+
+        $description = get_string('payment_required_desc', 'availability_stripepayment', (object)[
+            'item' => s($itemName),
+            'amount' => s($formattedAmount),
             'currency' => s(strtoupper($this->currency)),
         ]);
 
         $url = new \moodle_url('/availability/condition/stripepayment/payment.php', [
-            'cmid'    => $cm->id,
+            'cmid' => $cm->id,
             'sesskey' => sesskey(),
         ]);
 
-        // Standalone mode is used by compact containers such as Tiles sub-tiles,
-        // activity cards, and mobile tooltips. Return a plain link so the layout
-        // is not broken by the full Mustache template.
         if ($standalone) {
             return \html_writer::tag('span', $description, ['class' => 'd-block small mb-1']) .
                 \html_writer::link(
@@ -168,43 +218,43 @@ class condition extends \core_availability\condition {
         $PAGE->requires->js_call_amd('availability_stripepayment/payment', 'init');
 
         return $OUTPUT->render_from_template('availability_stripepayment/payment_button', [
-            'payurl'      => $url->out(false),
+            'payurl' => $url->out(false),
             'description' => $description,
         ]);
     }
 
     /**
-     * Format amount for display
+     * Format amount.
+     *
+     * @return string
      */
     private function format_amount_for_display() {
-        // Handle zero-decimal currencies (like JPY)
-        $zero_decimal_currencies = ['BIF', 'CLP', 'DJF', 'GNF', 'JPY', 'KMF', 'KRW', 'MGA', 'PYG', 'RWF', 'UGX', 'VND', 'VUV', 'XAF', 'XOF', 'XPF'];
+        $zeroDecimalCurrencies = [
+            'JPY', 'KRW', 'VND', 'XAF', 'XOF', 'XPF',
+        ];
 
-        // Amount is stored in major units (e.g. 30 = £30). No division needed.
-        $display_amount = $this->amount;
+        $displayAmount = $this->amount;
 
-        // Currency symbols
-        $currency_symbols = [
+        $currencySymbols = [
             'USD' => '$',
             'EUR' => '€',
             'GBP' => '£',
             'JPY' => '¥',
-            'CAD' => 'C$',
-            'AUD' => 'A$',
-            'AED' => 'AED ',
         ];
 
-        $symbol = $currency_symbols[strtoupper($this->currency)] ?? strtoupper($this->currency) . ' ';
+        $symbol = $currencySymbols[strtoupper($this->currency)] ?? strtoupper($this->currency) . ' ';
 
-        if (in_array(strtoupper($this->currency), $zero_decimal_currencies)) {
-            return $symbol . number_format($display_amount, 0);
-        } else {
-            return $symbol . number_format($display_amount, 2);
+        if (in_array(strtoupper($this->currency), $zeroDecimalCurrencies)) {
+            return $symbol . number_format($displayAmount, 0);
         }
+
+        return $symbol . number_format($displayAmount, 2);
     }
 
     /**
-     * Obtains a representation of the options of this condition as a string
+     * Debug string.
+     *
+     * @return string
      */
     protected function get_debug_string() {
         return $this->currency . ' ' . $this->amount . ' (' . $this->itemname . ')';
