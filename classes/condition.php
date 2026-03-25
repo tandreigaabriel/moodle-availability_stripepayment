@@ -28,7 +28,6 @@ namespace availability_stripepayment;
  * Availability condition for Stripe payments.
  */
 class condition extends \core_availability\condition {
-
     /** @var float Payment amount */
     protected $amount;
 
@@ -118,13 +117,16 @@ class condition extends \core_availability\condition {
         $cm = $info->get_course_module();
         $context = $info->get_context();
 
-        if (has_capability('moodle/course:manageactivities', $context, $USER->id) ||
-                has_capability('moodle/site:config', \context_system::instance(), $USER->id)) {
-
+        if (
+            has_capability('moodle/course:manageactivities', $context, $USER->id) ||
+                has_capability('moodle/site:config', \context_system::instance(), $USER->id)
+        ) {
             $reporturl = new \moodle_url('/availability/condition/stripepayment/activity_report.php', ['cmid' => $cm->id]);
-            $reportlink = \html_writer::link($reporturl,
+            $reportlink = \html_writer::link(
+                $reporturl,
                 get_string('activitypaymentreport', 'availability_stripepayment'),
-                ['class' => 'btn btn-sm btn-outline-info ms-2']);
+                ['class' => 'btn btn-sm btn-outline-info ms-2']
+            );
 
             return get_string('already_paid', 'availability_stripepayment') . ' ' . $reportlink;
         }
@@ -133,11 +135,13 @@ class condition extends \core_availability\condition {
             return get_string('not_paid', 'availability_stripepayment');
         }
 
-        if ($DB->record_exists('availability_stripepayment_payments', [
+        if (
+            $DB->record_exists('availability_stripepayment_payments', [
             'userid' => $USER->id,
             'cmid' => $cm->id,
             'status' => 'completed',
-        ])) {
+            ])
+        ) {
             return get_string('already_paid', 'availability_stripepayment');
         }
 
@@ -157,8 +161,11 @@ class condition extends \core_availability\condition {
 
         if ($standalone) {
             return \html_writer::tag('span', $description, ['class' => 'd-block small mb-1']) .
-                   \html_writer::link($url, get_string('pay_now', 'availability_stripepayment'),
-                       ['class' => 'btn btn-sm btn-primary']);
+                   \html_writer::link(
+                       $url,
+                       get_string('pay_now', 'availability_stripepayment'),
+                       ['class' => 'btn btn-sm btn-primary']
+                   );
         }
 
         $PAGE->requires->js_call_amd('availability_stripepayment/payment', 'init');
