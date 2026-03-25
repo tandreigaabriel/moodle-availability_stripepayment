@@ -8,11 +8,11 @@
 //
 // Moodle is distributed in the hope that it will be useful,
 // but WITHOUT ANY WARRANTY; without even the implied warranty of
-// MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
+// MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
 // GNU General Public License for more details.
 //
 // You should have received a copy of the GNU General Public License
-// along with Moodle. If not, see <https://www.gnu.org/licenses/>.
+// along with Moodle.  If not, see <https://www.gnu.org/licenses/>.
 
 /**
  * Stripe payment availability condition.
@@ -28,7 +28,6 @@ namespace availability_stripepayment;
  * Availability condition for Stripe payments.
  */
 class condition extends \core_availability\condition {
-
     /**
      * Payment amount.
      *
@@ -164,40 +163,40 @@ class condition extends \core_availability\condition {
             has_capability('moodle/course:manageactivities', $context, $USER->id) ||
             has_capability('moodle/site:config', \context_system::instance(), $USER->id)
         ) {
-            $reportUrl = new \moodle_url(
+            $reporturl = new \moodle_url(
                 '/availability/condition/stripepayment/activity_report.php',
                 ['cmid' => $cm->id]
             );
 
-            $reportLink = \html_writer::link(
-                $reportUrl,
+            $reportlink = \html_writer::link(
+                $reporturl,
                 get_string('activitypaymentreport', 'availability_stripepayment'),
                 ['class' => 'btn btn-sm btn-outline-info ms-2']
             );
 
-            return get_string('already_paid', 'availability_stripepayment') . ' ' . $reportLink;
+            return get_string('already_paid', 'availability_stripepayment') . ' ' . $reportlink;
         }
 
         if ($not) {
             return get_string('not_paid', 'availability_stripepayment');
         }
 
-        $hasPaid = $DB->record_exists('availability_stripepayment_payments', [
+        $haspaid = $DB->record_exists('availability_stripepayment_payments', [
             'userid' => $USER->id,
             'cmid' => $cm->id,
             'status' => 'completed',
         ]);
 
-        if ($hasPaid) {
+        if ($haspaid) {
             return get_string('already_paid', 'availability_stripepayment');
         }
 
-        $formattedAmount = $this->format_amount_for_display();
-        $itemName = $this->itemname ?: $cm->name;
+        $formattedamount = $this->format_amount_for_display();
+        $itemname = $this->itemname ?: $cm->name;
 
         $description = get_string('payment_required_desc', 'availability_stripepayment', (object)[
-            'item' => s($itemName),
-            'amount' => s($formattedAmount),
+            'item' => s($itemname),
+            'amount' => s($formattedamount),
             'currency' => s(strtoupper($this->currency)),
         ]);
 
@@ -229,26 +228,24 @@ class condition extends \core_availability\condition {
      * @return string
      */
     private function format_amount_for_display() {
-        $zeroDecimalCurrencies = [
-            'JPY', 'KRW', 'VND', 'XAF', 'XOF', 'XPF',
-        ];
+        $zerodecimalcurrencies = ['JPY', 'KRW', 'VND', 'XAF', 'XOF', 'XPF'];
 
-        $displayAmount = $this->amount;
+        $displayamount = $this->amount;
 
-        $currencySymbols = [
+        $currencysymbols = [
             'USD' => '$',
             'EUR' => '€',
             'GBP' => '£',
             'JPY' => '¥',
         ];
 
-        $symbol = $currencySymbols[strtoupper($this->currency)] ?? strtoupper($this->currency) . ' ';
+        $symbol = $currencysymbols[strtoupper($this->currency)] ?? strtoupper($this->currency) . ' ';
 
-        if (in_array(strtoupper($this->currency), $zeroDecimalCurrencies)) {
-            return $symbol . number_format($displayAmount, 0);
+        if (in_array(strtoupper($this->currency), $zerodecimalcurrencies)) {
+            return $symbol . number_format($displayamount, 0);
         }
 
-        return $symbol . number_format($displayAmount, 2);
+        return $symbol . number_format($displayamount, 2);
     }
 
     /**
