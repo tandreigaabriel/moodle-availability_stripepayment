@@ -3,7 +3,16 @@
 //
 // Moodle is free software: you can redistribute it and/or modify
 // it under the terms of the GNU General Public License as published by
-// the Free Software Foundation...
+// the Free Software Foundation, either version 3 of the License, or
+// (at your option) any later version.
+//
+// Moodle is distributed in the hope that it will be useful,
+// but WITHOUT ANY WARRANTY; without even the implied warranty of
+// MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+// GNU General Public License for more details.
+//
+// You should have received a copy of the GNU General Public License
+// along with Moodle.  If not, see <https://www.gnu.org/licenses/>.
 
 /**
  * Library functions for the Stripe availability condition.
@@ -17,9 +26,13 @@ defined('MOODLE_INTERNAL') || die();
 
 /**
  * Add a "Stripe payments" link to the course Reports section in the navigation.
+ *
+ * @param \navigation_node $navigation The navigation node to extend.
+ * @param \stdClass $course The course object.
+ * @param \context $context The course context.
+ * @return void
  */
-function availability_stripepayment_extend_navigation_course($navigation, $course, $context)
-{
+function availability_stripepayment_extend_navigation_course($navigation, $course, $context) {
     if (
         !has_capability('availability/stripepayment:managetransactions', $context) &&
         !has_capability('moodle/course:manageactivities', $context)
@@ -41,9 +54,12 @@ function availability_stripepayment_extend_navigation_course($navigation, $cours
 
 /**
  * Check if a user has a completed payment for a course module.
+ *
+ * @param int $userid The user ID.
+ * @param int $cmid The course module ID.
+ * @return bool True if a completed payment exists, false otherwise.
  */
-function availability_stripepayment_has_paid($userid, $cmid)
-{
+function availability_stripepayment_has_paid($userid, $cmid) {
     global $DB;
 
     return $DB->record_exists('availability_stripepayment_payments', [
@@ -55,9 +71,11 @@ function availability_stripepayment_has_paid($userid, $cmid)
 
 /**
  * Find the Stripe condition object inside a Moodle availability tree.
+ *
+ * @param mixed $tree The availability tree or condition node.
+ * @return \availability_stripepayment\condition|null The condition object, or null if not found.
  */
-function availability_stripepayment_find_condition($tree)
-{
+function availability_stripepayment_find_condition($tree) {
     if (!$tree) {
         return null;
     }
@@ -79,9 +97,11 @@ function availability_stripepayment_find_condition($tree)
 
 /**
  * Search for the Stripe condition inside a core_availability\tree via reflection.
+ *
+ * @param \core_availability\tree $tree The availability tree.
+ * @return \availability_stripepayment\condition|null The condition object, or null if not found.
  */
-function availability_stripepayment_find_in_availability_tree($tree)
-{
+function availability_stripepayment_find_in_availability_tree($tree) {
     $reflection = new ReflectionClass($tree);
     $prop = $reflection->getProperty('children');
     $prop->setAccessible(true);
@@ -96,9 +116,11 @@ function availability_stripepayment_find_in_availability_tree($tree)
 
 /**
  * Iterate over an array of child nodes and return the first Stripe condition found.
+ *
+ * @param array $children Array of availability condition nodes.
+ * @return \availability_stripepayment\condition|null The condition object, or null if not found.
  */
-function availability_stripepayment_find_in_children(array $children)
-{
+function availability_stripepayment_find_in_children(array $children) {
     foreach ($children as $child) {
         if (is_a($child, 'availability_stripepayment\\condition')) {
             return $child;
@@ -115,9 +137,16 @@ function availability_stripepayment_find_in_children(array $children)
 
 /**
  * Insert a new pending payment record.
+ *
+ * @param int $userid The user ID.
+ * @param int $cmid The course module ID.
+ * @param int $courseid The course ID.
+ * @param string $sessionid The Stripe checkout session ID.
+ * @param int $amount The payment amount.
+ * @param string $currency The ISO 4217 currency code (uppercase).
+ * @return int The new record ID.
  */
-function availability_stripepayment_create_payment($userid, $cmid, $courseid, $sessionid, $amount, $currency)
-{
+function availability_stripepayment_create_payment($userid, $cmid, $courseid, $sessionid, $amount, $currency) {
     global $DB;
 
     $payment = new stdClass();
@@ -136,9 +165,12 @@ function availability_stripepayment_create_payment($userid, $cmid, $courseid, $s
 
 /**
  * Send internal email notifications after a successful payment.
+ *
+ * @param \stdClass $payment The payment record from the database.
+ * @param \Stripe\Checkout\Session $session The Stripe checkout session object.
+ * @return bool True on success, false if required data is missing.
  */
-function availability_stripepayment_send_payment_notifications($payment, $session)
-{
+function availability_stripepayment_send_payment_notifications($payment, $session) {
     global $DB, $CFG;
 
     $user = $DB->get_record('user', ['id' => $payment->userid]);
@@ -213,9 +245,14 @@ function availability_stripepayment_send_payment_notifications($payment, $sessio
 
 /**
  * Send an email using Moodle's email system.
+ *
+ * @param string $to Recipient email address.
+ * @param string $subject Email subject.
+ * @param string $message Plain-text message body.
+ * @param string|null $htmlmessage Optional HTML message body.
+ * @return bool True if the email was sent successfully.
  */
-function availability_stripepayment_send_email($to, $subject, $message, $htmlmessage = null)
-{
+function availability_stripepayment_send_email($to, $subject, $message, $htmlmessage = null) {
     global $CFG;
 
     $from = get_admin();
