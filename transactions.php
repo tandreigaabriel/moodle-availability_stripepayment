@@ -51,13 +51,11 @@ $PAGE->set_url(new moodle_url('/availability/condition/stripepayment/transaction
 
 $PAGE->set_title(get_string('transactionsreport', 'availability_stripepayment'));
 $PAGE->set_heading(isset($course) ? $course->fullname : get_string('transactionsreport', 'availability_stripepayment'));
-
 require_login($courseid ?: null);
-
 // Check permissions.
 if (
     !has_capability('availability/stripepayment:managetransactions', context_system::instance()) &&
-        !has_capability('moodle/course:manageactivities', $context)
+    !has_capability('moodle/course:manageactivities', $context)
 ) {
     require_capability('availability/stripepayment:managetransactions', $context);
 }
@@ -91,13 +89,10 @@ if ($download) {
 }
 
 echo $OUTPUT->header();
-
 // Header with export buttons.
 echo html_writer::start_div('d-flex justify-content-between align-items-center mb-4');
 echo html_writer::tag('h2', get_string('transactionsreport', 'availability_stripepayment'), ['class' => 'mb-0 h4']);
-
 echo html_writer::start_div('d-flex gap-2');
-
 $exporturl = new moodle_url($PAGE->url, ['download' => 'csv']);
 echo html_writer::link(
     $exporturl,
@@ -112,7 +107,6 @@ echo html_writer::link('https://dashboard.stripe.com/payments', '⧉ Stripe Dash
 
 echo html_writer::end_div();
 echo html_writer::end_div();
-
 // Filter form.
 $courseswithpayments = $DB->get_records_sql(
     "SELECT DISTINCT c.id, c.fullname
@@ -122,25 +116,21 @@ $courseswithpayments = $DB->get_records_sql(
 );
 
 $baseurl = new moodle_url('/availability/condition/stripepayment/transactions.php');
-
 echo html_writer::start_tag('form', [
     'method' => 'get',
     'action' => $baseurl->out(false),
     'class' => 'd-flex flex-wrap align-items-end gap-3 mb-4 p-3 bg-light border rounded',
 ]);
-
 // Course filter.
 echo html_writer::start_div('');
 echo html_writer::tag('label', get_string('course', 'moodle'), [
     'for' => 'filter_courseid',
     'class' => 'form-label mb-1 small fw-semibold',
 ]);
-
 $courseoptions = [0 => get_string('allcourses', 'availability_stripepayment')];
 foreach ($courseswithpayments as $c) {
     $courseoptions[$c->id] = format_string($c->fullname);
 }
-
 echo html_writer::select($courseoptions, 'courseid', $courseid, false, [
     'id' => 'filter_courseid',
     'class' => 'form-select form-select-sm',
@@ -195,7 +185,7 @@ if ($courseid || $status) {
     );
 
     $filtertext = get_string('filteractive', 'availability_stripepayment') . ' ' .
-                  implode(' &bull; ', $active) . ' &mdash; ' . $link;
+        implode(' &bull; ', $active) . ' &mdash; ' . $link;
 
     echo html_writer::div($filtertext, 'alert alert-info py-2');
 }
@@ -221,5 +211,4 @@ if ($table->totalrows) {
 
     echo html_writer::end_div();
 }
-
 echo $OUTPUT->footer();
