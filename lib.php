@@ -164,6 +164,43 @@ function availability_stripepayment_create_payment($userid, $cmid, $courseid, $s
 }
 
 /**
+ * Build an HTML email body.
+ *
+ * @param string      $title   Email title shown in the header bar.
+ * @param string      $heading Introductory heading text (HTML allowed).
+ * @param array       $rows    Array of [label, value] pairs for the detail table.
+ * @param string|null $footer  Optional footer HTML appended below the table.
+ * @return string HTML email body.
+ */
+function availability_stripepayment_email_html($title, $heading, array $rows, $footer = null) {
+    $tablerows = '';
+    foreach ($rows as [$label, $value]) {
+        $tablerows .= '<tr>'
+            . '<td style="padding:6px 12px;font-weight:bold;white-space:nowrap;color:#495057;">'
+            . htmlspecialchars($label) . '</td>'
+            . '<td style="padding:6px 12px;color:#212529;">'
+            . htmlspecialchars($value) . '</td>'
+            . '</tr>';
+    }
+
+    $footerhtml = $footer ? '<div style="margin-top:16px;">' . $footer . '</div>' : '';
+
+    return '<!DOCTYPE html><html><body style="font-family:Arial,sans-serif;background:#f8f9fa;margin:0;padding:20px;">'
+        . '<div style="max-width:600px;margin:0 auto;background:#fff;border-radius:6px;overflow:hidden;'
+        . 'box-shadow:0 1px 4px rgba(0,0,0,.1);">'
+        . '<div style="background:#4f46e5;padding:20px 24px;">'
+        . '<h2 style="margin:0;color:#fff;font-size:18px;">' . htmlspecialchars($title) . '</h2>'
+        . '</div>'
+        . '<div style="padding:24px;">'
+        . '<p style="margin:0 0 16px;">' . $heading . '</p>'
+        . '<table style="width:100%;border-collapse:collapse;background:#f8f9fa;border-radius:4px;">'
+        . $tablerows
+        . '</table>'
+        . $footerhtml
+        . '</div></div></body></html>';
+}
+
+/**
  * Send internal email notifications after a successful payment.
  *
  * @param \stdClass $payment The payment record from the database.
