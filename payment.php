@@ -36,14 +36,18 @@ if (!$cm) {
     throw new moodle_exception('invalidcoursemodule');
 }
 
+$context = context_module::instance($cmid);
 require_course_login($cm->course);
 
 $context = context_module::instance($cmid);
+
+// Custom capability check 
+if (!has_capability('availability/stripepayment:pay', $context, $USER)) {
+    redirect(new moodle_url('/course/view.php', ['id' => $cm->course]));
+}
 $PAGE->set_url('/availability/condition/stripepayment/payment.php', ['cmid' => $cmid]);
 $PAGE->set_context($context);
 $PAGE->set_pagelayout('incourse');
-
-require_capability('moodle/course:view', context_course::instance($cm->course));
 
 $config = get_config('availability_stripepayment');
 if (empty($config->stripe_secret_key)) {
@@ -111,9 +115,22 @@ if (!preg_match('/^[a-z]{3}$/', $currency)) {
 }
 
 $zerodecimalcurrencies = [
-    'BIF', 'CLP', 'DJF', 'GNF', 'JPY', 'KMF',
-    'KRW', 'MGA', 'PYG', 'RWF', 'UGX',
-    'VND', 'VUV', 'XAF', 'XOF', 'XPF',
+    'BIF',
+    'CLP',
+    'DJF',
+    'GNF',
+    'JPY',
+    'KMF',
+    'KRW',
+    'MGA',
+    'PYG',
+    'RWF',
+    'UGX',
+    'VND',
+    'VUV',
+    'XAF',
+    'XOF',
+    'XPF',
 ];
 
 $stripeunitamount = in_array(strtoupper($currency), $zerodecimalcurrencies)
@@ -125,16 +142,18 @@ $stripeunitamount = in_array(strtoupper($currency), $zerodecimalcurrencies)
 try {
     $session = \Stripe\Checkout\Session::create([
         'payment_method_types' => ['card'],
-        'line_items' => [[
-            'price_data' => [
-                'currency' => $currency,
-                'product_data' => [
-                    'name' => $itemname,
+        'line_items' => [
+            [
+                'price_data' => [
+                    'currency' => $currency,
+                    'product_data' => [
+                        'name' => $itemname,
+                    ],
+                    'unit_amount' => $stripeunitamount,
                 ],
-                'unit_amount' => $stripeunitamount,
-            ],
-            'quantity' => 1,
-        ]],
+                'quantity' => 1,
+            ]
+        ],
         'mode' => 'payment',
         'success_url' => $CFG->wwwroot . '/availability/condition/stripepayment/success.php?sessionid={CHECKOUT_SESSION_ID}&cmid=' . $cmid,
         'cancel_url' => $CFG->wwwroot . '/course/view.php?id=' . $cm->course,

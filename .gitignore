@@ -8,6 +8,7 @@ npm-debug.log*
 grunt-debug.log*
 build-amd.js
 moodle_plugin_standards.txt
+vendor
 # Composer lock (not needed because vendor is bundled)
 composer.lock
 # Ignore Stripe example README (contains test API keys triggering GitHub scan)
@@ -35,7 +36,7 @@ vendor/stripe/stripe-php/README.md
 Thumbs.db
 ehthumbs.db
 desktop.ini
-
+settings.local.json
 # ---------------------------------------------------------------
 # Release artefacts — built locally, not committed
 # ---------------------------------------------------------------
