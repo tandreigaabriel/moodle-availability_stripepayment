@@ -10,16 +10,15 @@
  * This module defines the UI for configuring the Stripe payment restriction.
  * It replaces the legacy YUI module and integrates with core_availability.
  *
- * IMPORTANT:
- * We use core/str to load language strings dynamically instead of relying
- * on PHP-passed strings, which can fail in some contexts.
+ * Language strings are pre-loaded by frontend.php via js_call_amd and passed
+ * to init() as the second argument, ensuring synchronous access in getNode().
  *
  * @module     availability_stripepayment/form
  * @copyright  2025 Andrei Toma <https://www.tagwebdesign.co.uk>
  * @license    https://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
  */
 
-define(['core/str'], function(Str) {
+define([], function() {
     'use strict';
 
     return {
@@ -28,8 +27,9 @@ define(['core/str'], function(Str) {
          * Initialise the Stripe availability form.
          *
          * @param {Object} currencies Map of currency codes to names
+         * @param {Object} strings    Map of label strings pre-loaded from PHP
          */
-        init: function(currencies) {
+        init: function(currencies, strings) {
 
             // Ensure namespace exists.
             M.availability_stripepayment = M.availability_stripepayment || {};
@@ -40,103 +40,92 @@ define(['core/str'], function(Str) {
             M.availability_stripepayment.form = {
 
                 currencies: currencies,
+                strings: strings,
                 addedEvents: false,
 
                 /**
-                 * Build and return the form node.
+                 * Build and return the form node synchronously.
                  *
                  * @param {Object} json Existing condition data
-                 * @return {Promise<HTMLElement>}
+                 * @return {HTMLElement}
                  */
                 getNode: function(json) {
                     var self = this;
 
-                    // Load language strings safely using Moodle API.
-                    return Str.get_strings([
-                        {key: 'currency', component: 'availability_stripepayment'},
-                        {key: 'amount', component: 'availability_stripepayment'},
-                        {key: 'itemname', component: 'availability_stripepayment'}
-                    ]).then(function(strings) {
+                    // Build currency dropdown options.
+                    var options = '';
+                    for (var code in self.currencies) {
+                        if (!Object.prototype.hasOwnProperty.call(self.currencies, code)) {
+                            continue;
+                        }
 
-                        var currencyLabel = strings[0];
-                        var amountLabel   = strings[1];
-                        var itemnameLabel = strings[2];
+                        var selected = (json.currency === code) ? ' selected="selected"' : '';
+                        options += '<option value="' + code + '"' + selected + '>'
+                            + self.currencies[code] + '</option>';
+                    }
 
-                        // Build currency dropdown options.
-                        var options = '';
-                        for (var code in self.currencies) {
-                            if (!Object.prototype.hasOwnProperty.call(self.currencies, code)) {
-                                continue;
+                    // Build HTML form structure using pre-loaded strings.
+                    var html = '<span><div class="container-fluid">'
+
+                        // Currency
+                        + '<div class="row mt-3">'
+                        + '<div class="col"><label for="stripecurrency">' + self.strings.currency + '</label></div>'
+                        + '<div class="col">'
+                        + '<select class="form-control" name="currency" id="stripecurrency">'
+                        + options + '</select>'
+                        + '</div></div>'
+
+                        // Amount
+                        + '<div class="row mt-3">'
+                        + '<div class="col"><label for="stripeamount">' + self.strings.amount + '</label></div>'
+                        + '<div class="col">'
+                        + '<input class="form-control" name="amount" type="text" id="stripeamount" />'
+                        + '</div></div>'
+
+                        // Item name
+                        + '<div class="row mt-3">'
+                        + '<div class="col"><label for="stripeitemname">' + self.strings.itemname + '</label></div>'
+                        + '<div class="col">'
+                        + '<input class="form-control" name="itemname" type="text" id="stripeitemname" />'
+                        + '</div></div>'
+
+                        + '</div></span>';
+
+                    // Convert HTML string to DOM node.
+                    var wrapper = document.createElement('div');
+                    wrapper.innerHTML = html;
+                    var node = wrapper.firstChild;
+
+                    // Populate existing values.
+                    if (json.amount !== undefined) {
+                        node.querySelector('input[name=amount]').value = json.amount;
+                    }
+                    if (json.itemname !== undefined) {
+                        node.querySelector('input[name=itemname]').value = json.itemname;
+                    }
+
+                    // Attach change listeners once.
+                    if (!self.addedEvents) {
+                        self.addedEvents = true;
+
+                        document.addEventListener('change', function(e) {
+                            var target = e.target;
+
+                            if (!target.closest('.availability_stripepayment')) {
+                                return;
                             }
 
-                            var selected = (json.currency === code) ? ' selected="selected"' : '';
-                            options += '<option value="' + code + '"' + selected + '>'
-                                + self.currencies[code] + '</option>';
-                        }
+                            if (target.matches('select[name=currency]')
+                                || target.matches('input[name=amount]')
+                                || target.matches('input[name=itemname]')) {
 
-                        // Build HTML form structure.
-                        var html = '<span><div class="container-fluid">'
+                                // Notify Moodle form to update state.
+                                M.core_availability.form.update();
+                            }
+                        });
+                    }
 
-                            // Currency
-                            + '<div class="row mt-3">'
-                            + '<div class="col"><label>' + currencyLabel + '</label></div>'
-                            + '<div class="col">'
-                            + '<select class="form-control" name="currency">'
-                            + options + '</select>'
-                            + '</div></div>'
-
-                            // Amount
-                            + '<div class="row mt-3">'
-                            + '<div class="col"><label>' + amountLabel + '</label></div>'
-                            + '<div class="col">'
-                            + '<input class="form-control" name="amount" type="text" />'
-                            + '</div></div>'
-
-                            // Item name
-                            + '<div class="row mt-3">'
-                            + '<div class="col"><label>' + itemnameLabel + '</label></div>'
-                            + '<div class="col">'
-                            + '<input class="form-control" name="itemname" type="text" />'
-                            + '</div></div>'
-
-                            + '</div></span>';
-
-                        // Convert HTML string to DOM node.
-                        var wrapper = document.createElement('div');
-                        wrapper.innerHTML = html;
-                        var node = wrapper.firstChild;
-
-                        // Populate existing values.
-                        if (json.amount !== undefined) {
-                            node.querySelector('input[name=amount]').value = json.amount;
-                        }
-                        if (json.itemname !== undefined) {
-                            node.querySelector('input[name=itemname]').value = json.itemname;
-                        }
-
-                        // Attach change listeners once.
-                        if (!self.addedEvents) {
-                            self.addedEvents = true;
-
-                            document.addEventListener('change', function(e) {
-                                var target = e.target;
-
-                                if (!target.closest('.availability_stripepayment')) {
-                                    return;
-                                }
-
-                                if (target.matches('select[name=currency]')
-                                    || target.matches('input[name=amount]')
-                                    || target.matches('input[name=itemname]')) {
-
-                                    // Notify Moodle form to update state.
-                                    M.core_availability.form.update();
-                                }
-                            });
-                        }
-
-                        return node;
-                    });
+                    return node;
                 },
 
                 /**
