@@ -252,66 +252,8 @@ function availability_stripepayment_send_payment_notifications($payment, $sessio
         '<p style="margin:0;color:#6c757d;font-size:13px;">Customer receipt has been sent automatically by Stripe.</p>'
     );
 
-    availability_stripepayment_send_email($accountsemail, $accountssubject, $accountsmessage, $accountshtml);
-
-    // Confirmation email to the student.
-    $studentsubject = get_string('email_student_subject', 'availability_stripepayment', $cm->name);
-
-    $studentmessage = get_string('email_student_body', 'availability_stripepayment') . "\n\n"
-        . "Activity: {$cm->name}\n"
-        . "Course: {$course->fullname}\n"
-        . "Amount: {$amountdisplay}\n"
-        . "Payment ID: {$session->id}\n"
-        . "Date: " . userdate(time()) . "\n\n"
-        . get_string('continue_to_activity', 'availability_stripepayment', $cm->name) . ': '
-        . "{$CFG->wwwroot}/mod/{$cm->modname}/view.php?id={$cm->id}";
-
-    $studentrows = [
-        ['Activity', $cm->name],
-        ['Course',   $course->fullname],
-        ['Amount',   $amountdisplay],
-        ['Payment ID', $session->id],
-        ['Date',     userdate(time())],
-    ];
-
-    $activityurl = "{$CFG->wwwroot}/mod/{$cm->modname}/view.php?id={$cm->id}";
-    $studentfooter = '<a href="' . $activityurl . '" '
-        . 'style="display:inline-block;margin-top:8px;padding:10px 20px;background:#4f46e5;'
-        . 'color:#fff;text-decoration:none;border-radius:4px;font-weight:bold;">'
-        . get_string('continue_to_activity', 'availability_stripepayment', htmlspecialchars($cm->name))
-        . '</a>';
-
-    $studenthtml = availability_stripepayment_email_html(
-        get_string('email_student_subject', 'availability_stripepayment', $cm->name),
-        '&#x2705; ' . get_string('email_student_body', 'availability_stripepayment'),
-        $studentrows,
-        $studentfooter
-    );
-
-    availability_stripepayment_send_email($user->email, $studentsubject, $studentmessage, $studenthtml);
-
-    // Notification to site admins.
-    foreach (get_admins() as $admin) {
-        $adminsubject = 'Student Payment - ' . $cm->name;
-
-        $adminmessage = "A student has paid for activity access:\n\n"
-            . "Student: {$user->firstname} {$user->lastname} ({$user->email})\n"
-            . "Activity: {$cm->name}\n"
-            . "Course: {$course->fullname}\n"
-            . "Amount: {$amountdisplay}\n"
-            . "Payment ID: {$session->id}\n"
-            . "Date: " . userdate(time()) . "\n\n"
-            . "View student: {$CFG->wwwroot}/user/profile.php?id={$user->id}\n"
-            . "View activity: {$CFG->wwwroot}/mod/{$cm->modname}/view.php?id={$cm->id}";
-
-        $adminhtml = availability_stripepayment_email_html(
-            'Student Payment Notification',
-            '&#x1F4B3; A student has completed payment.',
-            $rows
-        );
-
-        availability_stripepayment_send_email($admin->email, $adminsubject, $adminmessage, $adminhtml);
-    }
+    $accountsuser = $DB->get_record('user', ['email' => $accountsemail, 'deleted' => 0]) ?: get_admin();
+    email_to_user($accountsuser, core_user::get_noreply_user(), $accountssubject, $accountsmessage, $accountshtml);
 
     return true;
 }
@@ -332,25 +274,8 @@ function availability_stripepayment_send_email($to, $subject, $message, $htmlmes
     $touser = core_user::get_user_by_email($to);
 
     if (!$touser) {
-        $touser = new stdClass();
-        $touser->id = -99;
-        $touser->email = $to;
-        $touser->firstname = 'Accounts';
-        $touser->lastname = '';
-        $touser->username = 'availability_stripepayment_notify';
-        $touser->auth = 'manual';
-        $touser->confirmed = 1;
-        $touser->deleted = 0;
-        $touser->suspended = 0;
-        $touser->emailstop = 0;
-        $touser->mailformat = 1;
-        $touser->lang = $CFG->lang ?? 'en';
-        $touser->timezone = 99;
-        $touser->mnethostid = $CFG->mnet_localhost_id ?? 1;
-        $touser->firstnamephonetic = '';
-        $touser->lastnamephonetic = '';
-        $touser->middlename = '';
-        $touser->alternatename = '';
+        debugging('availability_stripepayment_send_email: no Moodle user found for ' . $to, DEBUG_DEVELOPER);
+        return false;
     }
 
     $result = email_to_user($touser, $from, $subject, $message, $htmlmessage);
