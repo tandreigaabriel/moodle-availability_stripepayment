@@ -62,7 +62,6 @@ class condition extends \core_availability\condition {
      */
     public function save() {
         $result = (object)['type' => 'stripepayment'];
-
         if ($this->amount) {
             $result->amount = $this->amount;
         }
@@ -72,7 +71,6 @@ class condition extends \core_availability\condition {
         if ($this->itemname) {
             $result->itemname = $this->itemname;
         }
-
         return $result;
     }
 
@@ -93,19 +91,10 @@ class condition extends \core_availability\condition {
         ];
     }
 
-    /**
-     * Check availability.
-     *
-     * @param bool $not
-     * @param \core_availability\info $info
-     * @param int $userid
-     * @return bool
-     */
     public function is_available($not, \core_availability\info $info, $userid) {
         global $DB;
 
         $allow = false;
-
         if ($info instanceof \core_availability\info_module) {
             $allow = $DB->record_exists('availability_stripepayment_payments', [
                 'userid' => $userid,
@@ -113,54 +102,29 @@ class condition extends \core_availability\condition {
                 'status' => 'completed',
             ]);
         }
-
         if ($not) {
             $allow = !$allow;
         }
-
         return $allow;
     }
 
-    /**
-     * Get description.
-     *
-     * @param bool $full
-     * @param bool $not
-     * @param \core_availability\info $info
-     * @return string
-     */
     public function get_description($full, $not, \core_availability\info $info) {
         return $this->get_either_description($not, !$full, $info);
     }
 
-    /**
-     * Build description output.
-     *
-     * @param bool $not
-     * @param bool $standalone
-     * @param \core_availability\info $info
-     * @return string
-     */
     protected function get_either_description($not, $standalone, $info) {
         global $USER, $DB, $OUTPUT, $PAGE;
 
         $cm = $info->get_course_module();
         $context = $info->get_context();
 
-        if (
-            has_capability('moodle/course:manageactivities', $context, $USER->id) ||
-            has_capability('moodle/site:config', \context_system::instance(), $USER->id)
-        ) {
-            $reporturl = new \moodle_url(
-                '/availability/condition/stripepayment/activity_report.php',
-                ['cmid' => $cm->id]
-            );
+        if (has_capability('moodle/course:manageactivities', $context, $USER->id) ||
+                has_capability('moodle/site:config', \context_system::instance(), $USER->id)) {
 
-            $reportlink = \html_writer::link(
-                $reporturl,
+            $reporturl = new \moodle_url('/availability/condition/stripepayment/activity_report.php', ['cmid' => $cm->id]);
+            $reportlink = \html_writer::link($reporturl,
                 get_string('activitypaymentreport', 'availability_stripepayment'),
-                ['class' => 'btn btn-sm btn-outline-info ms-2']
-            );
+                ['class' => 'btn btn-sm btn-outline-info ms-2']);
 
             return get_string('already_paid', 'availability_stripepayment') . ' ' . $reportlink;
         }
@@ -169,22 +133,20 @@ class condition extends \core_availability\condition {
             return get_string('not_paid', 'availability_stripepayment');
         }
 
-        $haspaid = $DB->record_exists('availability_stripepayment_payments', [
+        if ($DB->record_exists('availability_stripepayment_payments', [
             'userid' => $USER->id,
             'cmid' => $cm->id,
             'status' => 'completed',
-        ]);
-
-        if ($haspaid) {
+        ])) {
             return get_string('already_paid', 'availability_stripepayment');
         }
 
-        $formattedamount = $this->format_amount_for_display();
-        $itemname = $this->itemname ?: $cm->name;
+        $formatted = $this->format_amount_for_display();
+        $item = $this->itemname ?: $cm->name;
 
         $description = get_string('payment_required_desc', 'availability_stripepayment', (object)[
-            'item' => s($itemname),
-            'amount' => s($formattedamount),
+            'item' => s($item),
+            'amount' => s($formatted),
             'currency' => s(strtoupper($this->currency)),
         ]);
 
@@ -195,11 +157,8 @@ class condition extends \core_availability\condition {
 
         if ($standalone) {
             return \html_writer::tag('span', $description, ['class' => 'd-block small mb-1']) .
-                \html_writer::link(
-                    $url,
-                    get_string('pay_now', 'availability_stripepayment'),
-                    ['class' => 'btn btn-sm btn-primary']
-                );
+                   \html_writer::link($url, get_string('pay_now', 'availability_stripepayment'),
+                       ['class' => 'btn btn-sm btn-primary']);
         }
 
         $PAGE->requires->js_call_amd('availability_stripepayment/payment', 'init');
@@ -216,31 +175,22 @@ class condition extends \core_availability\condition {
      * @return string
      */
     private function format_amount_for_display() {
-        $zero_decimal_currencies = ['JPY', 'KRW', 'VND', 'XAF', 'XOF', 'XPF'];
+        $zd = ['JPY', 'KRW', 'VND', 'XAF', 'XOF', 'XPF'];  // zero decimal currencies
 
-        $displayamount = $this->amount;
-
-        $currency_symbols = [
+        $symbol = [
             'USD' => '$',
             'EUR' => '€',
             'GBP' => '£',
             'JPY' => '¥',
-        ];
+        ][strtoupper($this->currency)] ?? strtoupper($this->currency) . ' ';
 
-        $symbol = $currency_symbols[strtoupper($this->currency)] ?? strtoupper($this->currency) . ' ';
-
-        if (in_array(strtoupper($this->currency), $zero_decimal_currencies)) {
-            return $symbol . number_format($displayamount, 0);
+        if (in_array(strtoupper($this->currency), $zd)) {
+            return $symbol . number_format($this->amount, 0);
         }
 
-        return $symbol . number_format($displayamount, 2);
+        return $symbol . number_format($this->amount, 2);
     }
 
-    /**
-     * Debug string.
-     *
-     * @return string
-     */
     protected function get_debug_string() {
         return $this->currency . ' ' . $this->amount . ' (' . $this->itemname . ')';
     }
