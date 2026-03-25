@@ -289,6 +289,11 @@ class transactions_table extends \table_sql {
      * @return void
      */
     public function start_output() {
+        if ($this->is_downloading()) {
+            parent::start_output();
+            return;
+        }
+
         global $DB;
 
         $totalpayments = $DB->count_records('availability_stripepayment_payments');
