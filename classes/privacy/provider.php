@@ -30,9 +30,9 @@ use core_privacy\local\metadata\collection;
 use core_privacy\local\request\approved_contextlist;
 use core_privacy\local\request\approved_userlist;
 use core_privacy\local\request\contextlist;
+use core_privacy\local\request\transform;
 use core_privacy\local\request\userlist;
 use core_privacy\local\request\writer;
-use core_privacy\local\request\transform;
 
 /**
  * Privacy provider for the Stripe availability condition.
@@ -41,18 +41,15 @@ use core_privacy\local\request\transform;
  */
 class provider implements
     \core_privacy\local\metadata\provider,
-    \core_privacy\local\request\plugin\provider,
-    \core_privacy\local\request\core_userlist_provider
-{
-
+    \core_privacy\local\request\core_userlist_provider,
+    \core_privacy\local\request\plugin\provider {
     /**
      * Returns metadata about the data stored by this plugin.
      *
      * @param collection $collection
      * @return collection
      */
-    public static function get_metadata(collection $collection): collection
-    {
+    public static function get_metadata(collection $collection): collection {
         $collection->add_database_table(
             'availability_stripepayment_payments',
             [
@@ -65,7 +62,7 @@ class provider implements
                 'status' => 'privacy:metadata:payments:status',
                 'timecreated' => 'privacy:metadata:payments:timecreated',
             ],
-            'privacy:metadata:payments'
+            'privacy:metadata:payments',
         );
 
         return $collection;
@@ -77,8 +74,7 @@ class provider implements
      * @param int $userid
      * @return contextlist
      */
-    public static function get_contexts_for_userid(int $userid): contextlist
-    {
+    public static function get_contexts_for_userid(int $userid): contextlist {
         $contextlist = new contextlist();
 
         $contextlist->add_from_sql(
@@ -99,8 +95,7 @@ class provider implements
      * @param \core_privacy\local\request\userlist $userlist
      * @return void
      */
-    public static function get_users_in_context(userlist $userlist): void
-    {
+    public static function get_users_in_context(userlist $userlist): void {
         $context = $userlist->get_context();
 
         if (!$context instanceof \context_module) {
@@ -122,8 +117,7 @@ class provider implements
      * @param approved_contextlist $contextlist
      * @return void
      */
-    public static function export_user_data(approved_contextlist $contextlist): void
-    {
+    public static function export_user_data(approved_contextlist $contextlist): void {
         global $DB;
 
         if ($contextlist->count() === 0) {
@@ -173,8 +167,7 @@ class provider implements
      * @param \context $context
      * @return void
      */
-    public static function delete_data_for_all_users_in_context(\context $context): void
-    {
+    public static function delete_data_for_all_users_in_context(\context $context): void {
         global $DB;
 
         if (!$context instanceof \context_module) {
@@ -182,7 +175,7 @@ class provider implements
         }
 
         $DB->delete_records('availability_stripepayment_payments', [
-            'cmid' => $context->instanceid
+            'cmid' => $context->instanceid,
         ]);
     }
 
@@ -192,8 +185,7 @@ class provider implements
      * @param approved_contextlist $contextlist
      * @return void
      */
-    public static function delete_data_for_user(approved_contextlist $contextlist): void
-    {
+    public static function delete_data_for_user(approved_contextlist $contextlist): void {
         global $DB;
 
         if ($contextlist->count() === 0) {
@@ -220,8 +212,7 @@ class provider implements
      * @param approved_userlist $userlist
      * @return void
      */
-    public static function delete_data_for_users(approved_userlist $userlist): void
-    {
+    public static function delete_data_for_users(approved_userlist $userlist): void {
         global $DB;
 
         $context = $userlist->get_context();
@@ -230,7 +221,7 @@ class provider implements
             return;
         }
 
-        list($usersql, $params) = $DB->get_in_or_equal($userlist->get_userids(), SQL_PARAMS_NAMED);
+        [$usersql, $params] = $DB->get_in_or_equal($userlist->get_userids(), SQL_PARAMS_NAMED);
 
         $DB->delete_records_select(
             'availability_stripepayment_payments',
