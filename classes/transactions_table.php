@@ -276,7 +276,7 @@ class transactions_table extends \table_sql {
             return $stripeurl;
         }
 
-        return \html_writer::link($stripeurl, '🔗 Stripe', [
+        return \html_writer::link($stripeurl, get_string('stripelink', 'availability_stripepayment'), [
             'target' => '_blank',
             'class' => 'btn btn-sm btn-outline-primary',
             'title' => get_string('viewinstripe', 'availability_stripepayment'),

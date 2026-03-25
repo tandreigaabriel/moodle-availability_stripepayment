@@ -43,8 +43,7 @@ class condition extends \core_availability\condition
      *
      * @param \stdClass $structure Data structure.
      */
-    public function __construct($structure)
-    {
+    public function __construct($structure) {
         if (isset($structure->amount)) {
             $this->amount = $structure->amount;
         }
@@ -61,8 +60,7 @@ class condition extends \core_availability\condition
      *
      * @return \stdClass
      */
-    public function save()
-    {
+    public function save() {
         $result = (object) ['type' => 'stripepayment'];
         if ($this->amount) {
             $result->amount = $this->amount;
@@ -84,8 +82,7 @@ class condition extends \core_availability\condition
      * @param string $itemname
      * @return \stdClass
      */
-    public static function get_json($amount, $currency, $itemname)
-    {
+    public static function get_json($amount, $currency, $itemname) {
         return (object) [
             'type' => 'stripepayment',
             'amount' => $amount,
@@ -103,8 +100,7 @@ class condition extends \core_availability\condition
      * @param int                     $userid     User ID to check.
      * @return bool
      */
-    public function is_available($not, \core_availability\info $info, $grabthelot, $userid)
-    {
+    public function is_available($not, \core_availability\info $info, $grabthelot, $userid) {
         global $DB;
 
         $allow = false;
@@ -129,8 +125,7 @@ class condition extends \core_availability\condition
      * @param \core_availability\info $info Availability info.
      * @return string
      */
-    public function get_description($full, $not, \core_availability\info $info)
-    {
+    public function get_description($full, $not, \core_availability\info $info) {
         return $this->get_either_description($not, !$full, $info);
     }
 
@@ -142,8 +137,7 @@ class condition extends \core_availability\condition
      * @param \core_availability\info $info       Availability info.
      * @return string
      */
-    protected function get_either_description($not, $standalone, $info)
-    {
+    protected function get_either_description($not, $standalone, $info) {
         global $USER, $DB, $OUTPUT, $PAGE;
 
         $cm = $info->get_course_module();
@@ -213,8 +207,7 @@ class condition extends \core_availability\condition
      *
      * @return string
      */
-    private function format_amount_for_display()
-    {
+    private function format_amount_for_display() {
         $zd = ['JPY', 'KRW', 'VND', 'XAF', 'XOF', 'XPF']; // Zero decimal currencies.
 
         $symbol = [
@@ -236,8 +229,7 @@ class condition extends \core_availability\condition
      *
      * @return string
      */
-    protected function get_debug_string()
-    {
+    protected function get_debug_string() {
         return $this->currency . ' ' . $this->amount . ' (' . $this->itemname . ')';
     }
 }

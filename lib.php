@@ -225,31 +225,32 @@ function availability_stripepayment_send_payment_notifications($payment, $sessio
     $accountsemail = get_config('availability_stripepayment', 'accounts_email')
         ?: 'accounts@' . parse_url($CFG->wwwroot, PHP_URL_HOST);
 
-    $accountssubject = 'New Payment - ' . $amountdisplay;
+    $accountssubject = get_string('email_accounts_subject', 'availability_stripepayment', $amountdisplay);
 
-    $accountsmessage = "New payment received via Stripe:\n\n"
-        . "Student: {$user->firstname} {$user->lastname} ({$user->email})\n"
-        . "Activity: {$cm->name}\n"
-        . "Course: {$course->fullname}\n"
-        . "Amount: {$amountdisplay}\n"
-        . "Payment ID: {$session->id}\n"
-        . "Date: " . userdate(time()) . "\n\n"
-        . "Note: Customer receipt sent automatically by Stripe.";
+    $accountsmessage = get_string('email_accounts_intro', 'availability_stripepayment') . "\n\n"
+        . get_string('student', 'availability_stripepayment') . ': ' . fullname($user) . ' (' . $user->email . ")\n"
+        . get_string('email_accounts_row_activity', 'availability_stripepayment') . ': ' . $cm->name . "\n"
+        . get_string('email_accounts_row_course', 'availability_stripepayment') . ': ' . $course->fullname . "\n"
+        . get_string('amount', 'availability_stripepayment') . ': ' . $amountdisplay . "\n"
+        . get_string('payment_detail_id', 'availability_stripepayment') . ': ' . $session->id . "\n"
+        . get_string('email_accounts_row_date', 'availability_stripepayment') . ': ' . userdate(time()) . "\n\n"
+        . get_string('email_accounts_note', 'availability_stripepayment');
 
     $rows = [
-        ['Student', fullname($user) . ' (' . $user->email . ')'],
-        ['Activity', $cm->name],
-        ['Course', $course->fullname],
-        ['Amount', $amountdisplay],
-        ['Payment ID', $session->id],
-        ['Date', userdate(time())],
+        [get_string('student', 'availability_stripepayment'), fullname($user) . ' (' . $user->email . ')'],
+        [get_string('email_accounts_row_activity', 'availability_stripepayment'), $cm->name],
+        [get_string('email_accounts_row_course', 'availability_stripepayment'), $course->fullname],
+        [get_string('amount', 'availability_stripepayment'), $amountdisplay],
+        [get_string('payment_detail_id', 'availability_stripepayment'), $session->id],
+        [get_string('email_accounts_row_date', 'availability_stripepayment'), userdate(time())],
     ];
 
     $accountshtml = availability_stripepayment_email_html(
-        'New Payment Received',
-        '&#x2705; New payment received via Stripe.',
+        get_string('email_accounts_html_title', 'availability_stripepayment'),
+        get_string('email_accounts_html_heading', 'availability_stripepayment'),
         $rows,
-        '<p style="margin:0;color:#6c757d;font-size:13px;">Customer receipt has been sent automatically by Stripe.</p>'
+        '<p style="margin:0;color:#6c757d;font-size:13px;">'
+            . get_string('email_accounts_html_footer', 'availability_stripepayment') . '</p>'
     );
 
     $accountsuser = $DB->get_record('user', ['email' => $accountsemail, 'deleted' => 0]) ?: get_admin();

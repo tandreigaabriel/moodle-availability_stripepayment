@@ -100,7 +100,7 @@ echo html_writer::link(
     ['class' => 'btn btn-sm btn-outline-success']
 );
 
-echo html_writer::link('https://dashboard.stripe.com/payments', '⧉ Stripe Dashboard', [
+echo html_writer::link('https://dashboard.stripe.com/payments', get_string('stripedashboard', 'availability_stripepayment'), [
     'class' => 'btn btn-sm btn-outline-primary',
     'target' => '_blank',
 ]);

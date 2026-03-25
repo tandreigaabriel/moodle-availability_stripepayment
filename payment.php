@@ -41,7 +41,7 @@ require_course_login($cm->course);
 
 $context = context_module::instance($cmid);
 
-// Custom capability check 
+// Custom capability check.
 if (!has_capability('availability/stripepayment:pay', $context, $USER)) {
     redirect(new moodle_url('/course/view.php', ['id' => $cm->course]));
 }
@@ -152,10 +152,11 @@ try {
                     'unit_amount' => $stripeunitamount,
                 ],
                 'quantity' => 1,
-            ]
+            ],
         ],
         'mode' => 'payment',
-        'success_url' => $CFG->wwwroot . '/availability/condition/stripepayment/success.php?sessionid={CHECKOUT_SESSION_ID}&cmid=' . $cmid,
+        'success_url' => $CFG->wwwroot .
+            '/availability/condition/stripepayment/success.php?sessionid={CHECKOUT_SESSION_ID}&cmid=' . $cmid,
         'cancel_url' => $CFG->wwwroot . '/course/view.php?id=' . $cm->course,
         'metadata' => [
             'userid' => $USER->id,
@@ -175,7 +176,6 @@ try {
     );
 
     redirect($session->url);
-
 } catch (Exception $e) {
     debugging('Stripe error: ' . $e->getMessage(), DEBUG_DEVELOPER);
 

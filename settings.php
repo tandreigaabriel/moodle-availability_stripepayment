@@ -70,12 +70,12 @@ if ($hassiteconfig && isset($settings)) {
     ));
 
     // Transactions page link (SAFE - no admin tree injection)
-    $transactions_url = new moodle_url('/availability/condition/stripepayment/transactions.php');
+    $transactionsurl = new moodle_url('/availability/condition/stripepayment/transactions.php');
     $settings->add(new admin_setting_description(
         'availability_stripepayment/transactions_link',
         get_string('settings_transactions_heading', 'availability_stripepayment'),
         html_writer::link(
-            $transactions_url,
+            $transactionsurl,
             get_string('settings_transactions_link', 'availability_stripepayment'),
             ['class' => 'btn btn-primary']
         )
