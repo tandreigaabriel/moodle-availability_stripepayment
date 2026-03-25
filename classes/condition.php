@@ -28,25 +28,14 @@ namespace availability_stripepayment;
  * Availability condition for Stripe payments.
  */
 class condition extends \core_availability\condition {
-    /**
-     * Payment amount.
-     *
-     * @var float
-     */
+
+    /** @var float Payment amount */
     protected $amount;
 
-    /**
-     * Currency code.
-     *
-     * @var string
-     */
+    /** @var string Currency code */
     protected $currency;
 
-    /**
-     * Item name.
-     *
-     * @var string
-     */
+    /** @var string Item name */
     protected $itemname;
 
     /**
@@ -109,7 +98,7 @@ class condition extends \core_availability\condition {
      *
      * @param bool $not
      * @param \core_availability\info $info
-     * @param bool $grabthelot
+     * @param bool $grabthelot  // kept for API compatibility (parent class + Moodle core)
      * @param int $userid
      * @return bool
      */
@@ -223,25 +212,25 @@ class condition extends \core_availability\condition {
     }
 
     /**
-     * Format amount.
+     * Format amount for display.
      *
      * @return string
      */
     private function format_amount_for_display() {
-        $zerodecimalcurrencies = ['JPY', 'KRW', 'VND', 'XAF', 'XOF', 'XPF'];
+        $zero_decimal_currencies = ['JPY', 'KRW', 'VND', 'XAF', 'XOF', 'XPF'];
 
         $displayamount = $this->amount;
 
-        $currencysymbols = [
+        $currency_symbols = [
             'USD' => '$',
             'EUR' => '€',
             'GBP' => '£',
             'JPY' => '¥',
         ];
 
-        $symbol = $currencysymbols[strtoupper($this->currency)] ?? strtoupper($this->currency) . ' ';
+        $symbol = $currency_symbols[strtoupper($this->currency)] ?? strtoupper($this->currency) . ' ';
 
-        if (in_array(strtoupper($this->currency), $zerodecimalcurrencies)) {
+        if (in_array(strtoupper($this->currency), $zero_decimal_currencies)) {
             return $symbol . number_format($displayamount, 0);
         }
 
