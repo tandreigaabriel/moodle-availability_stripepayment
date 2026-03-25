@@ -3,51 +3,64 @@
 //
 // Moodle is free software: you can redistribute it and/or modify
 // it under the terms of the GNU General Public License as published by
-// the Free Software Foundation.
+// the Free Software Foundation, either version 3 of the License, or
+// (at your option) any later version.
+//
+// Moodle is distributed in the hope that it will be useful,
+// but WITHOUT ANY WARRANTY; without even the implied warranty of
+// MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+// GNU General Public License for more details.
+//
+// You should have received a copy of the GNU General Public License
+// along with Moodle.  If not, see <https://www.gnu.org/licenses/>.
 
 /**
- * Front-end class.
+ * Front-end class for Stripe availability condition.
  *
  * @package    availability_stripepayment
- * @copyright  2025 Andrei Toma <https://www.tagwebdesign.co.uk>
+ * @copyright  2025 Andrei Toma
  * @license    https://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
  */
 
 namespace availability_stripepayment;
 
-defined('MOODLE_INTERNAL') || die();
-
-class frontend extends \core_availability\frontend
-{
+/**
+ * Frontend handler for Stripe availability condition.
+ */
+class frontend extends \core_availability\frontend {
+    /**
+     * Pre-load language strings into M.str so M.util.get_string() works in JS.
+     *
+     * @return string[]
+     */
+    protected function get_javascript_strings() {
+        return ['currency', 'amount', 'itemname'];
+    }
 
     /**
-     * Return true always — any teacher/admin can add this condition.
+     * Allow adding this condition.
      *
-     * @param stdClass $course
-     * @param \cm_info|null $cm
-     * @param \section_info|null $section
+     * @param \stdClass $course Course object.
+     * @param \cm_info|null $cm Course module.
+     * @param \section_info|null $section Section info.
      * @return bool
      */
-    protected function allow_add($course, \cm_info $cm = null, \section_info $section = null)
-    {
-        // Required by Moodle API but not used.
+    protected function allow_add($course, \cm_info $cm = null, \section_info $section = null) {
         unset($course, $cm, $section);
 
         return true;
     }
 
     /**
-     * Load the AMD form module instead of the legacy YUI module.
+     * Include AMD JavaScript.
      *
-     * @param \stdClass $course
-     * @param \cm_info|null $cm
-     * @param \section_info|null $section
+     * @param \stdClass $course Course object.
+     * @param \cm_info|null $cm Course module.
+     * @param \section_info|null $section Section info.
      */
-    public function include_javascript($course, \cm_info $cm = null, \section_info $section = null)
-    {
+    public function include_javascript($course, \cm_info $cm = null, \section_info $section = null) {
         global $PAGE;
 
-        // Required by Moodle API but not used.
         unset($course, $cm, $section);
 
         $currencies = \get_string_manager()->get_list_of_currencies();
@@ -59,7 +72,7 @@ class frontend extends \core_availability\frontend
                 $currencies,
                 [
                     'currency' => get_string('currency', 'availability_stripepayment'),
-                    'amount'   => get_string('amount', 'availability_stripepayment'),
+                    'amount' => get_string('amount', 'availability_stripepayment'),
                     'itemname' => get_string('itemname', 'availability_stripepayment'),
                 ],
             ]
