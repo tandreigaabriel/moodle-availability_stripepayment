@@ -24,9 +24,4 @@
 
 defined('MOODLE_INTERNAL') || die();
 
-$callbacks = [
-    [
-        'hook'     => \core\hook\output\before_http_headers::class,
-        'callback' => \availability_stripepayment\hook\output\before_http_headers::class . '::callback',
-    ],
-];
+$callbacks = [];

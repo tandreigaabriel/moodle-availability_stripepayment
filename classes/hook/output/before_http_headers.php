@@ -24,19 +24,18 @@
 
 namespace availability_stripepayment\hook\output;
 
-use core\hook\output\before_http_headers as hook;
-
 /**
  * Hook handler for before HTTP headers.
  */
-class before_http_headers extends hook {
+class before_http_headers {
     /**
      * Callback executed before HTTP headers are sent.
      *
+     * @param \core\hook\output\before_http_headers $hook The hook instance.
      * @return void
      */
-    public static function callback(): void {
+    public static function callback(\core\hook\output\before_http_headers $hook): void {
         // Intentionally left empty.
-        // Moodle automatically loads styles.css via plugin system.
+        // Moodle automatically loads styles.css via the plugin system.
     }
 }
