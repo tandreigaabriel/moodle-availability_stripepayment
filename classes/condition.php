@@ -98,11 +98,10 @@ class condition extends \core_availability\condition {
      *
      * @param bool $not
      * @param \core_availability\info $info
-     * @param bool $grabthelot  // kept for API compatibility (parent class + Moodle core)
      * @param int $userid
      * @return bool
      */
-    public function is_available($not, \core_availability\info $info, $grabthelot, $userid) {
+    public function is_available($not, \core_availability\info $info, $userid) {
         global $DB;
 
         $allow = false;
