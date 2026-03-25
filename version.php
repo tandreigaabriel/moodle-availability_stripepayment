@@ -29,7 +29,7 @@
 defined('MOODLE_INTERNAL') || die();
 
 $plugin->component = 'availability_stripepayment';
-$plugin->version = 2026032104;
+$plugin->version = 2026032105;
 $plugin->requires = 2024042200; // Moodle 4.5+
 $plugin->supported = [405, 500];
 $plugin->maturity = MATURITY_STABLE;
