@@ -8,11 +8,11 @@
 //
 // Moodle is distributed in the hope that it will be useful,
 // but WITHOUT ANY WARRANTY; without even the implied warranty of
-// MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
-// See the GNU General Public License for more details.
+// MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+// GNU General Public License for more details.
 //
 // You should have received a copy of the GNU General Public License
-// along with Moodle. If not, see <https://www.gnu.org/licenses/>.
+// along with Moodle.  If not, see <https://www.gnu.org/licenses/>.
 
 /**
  * Payment success page — verifies payment and redirects to the activity.
@@ -26,15 +26,15 @@ require(__DIR__ . '/../../../config.php');
 require_once(__DIR__ . '/vendor/autoload.php');
 require_once(__DIR__ . '/lib.php');
 
-$sessionId = required_param('sessionid', PARAM_ALPHANUMEXT);
-$cmId = optional_param('cmid', 0, PARAM_INT);
+$sessionid = required_param('sessionid', PARAM_ALPHANUMEXT);
+$cmid = optional_param('cmid', 0, PARAM_INT);
 
 require_login();
 
 global $DB, $USER, $PAGE, $OUTPUT;
 
 $payment = $DB->get_record('availability_stripepayment_payments', [
-    'stripe_session_id' => $sessionId,
+    'stripe_session_id' => $sessionid,
     'userid' => $USER->id,
 ]);
 
@@ -48,6 +48,7 @@ if (!$payment) {
 }
 
 $cm = get_coursemodule_from_id('', $payment->cmid);
+
 if (!$cm) {
     redirect(
         new moodle_url('/course/view.php', ['id' => $payment->courseid]),
@@ -61,20 +62,21 @@ $context = context_course::instance($payment->courseid);
 $PAGE->set_context($context);
 require_capability('moodle/course:view', $context);
 
-// Stripe verification fallback.
+// Stripe verification fallback (if status is not yet completed).
 if ($payment->status !== 'completed') {
     $config = get_config('availability_stripepayment');
 
     if (!empty($config->stripe_secret_key)) {
         try {
             \Stripe\Stripe::setApiKey($config->stripe_secret_key);
-            $stripeSession = \Stripe\Checkout\Session::retrieve($sessionId);
+            $stripesession = \Stripe\Checkout\Session::retrieve($sessionid);
 
-            if ($stripeSession->payment_status === 'paid') {
+            if ($stripesession->payment_status === 'paid') {
                 $payment->status = 'completed';
                 $payment->timemodified = time();
                 $DB->update_record('availability_stripepayment_payments', $payment);
 
+                // Clear course modinfo cache.
                 try {
                     $cache = \cache::make('core', 'coursemodinfo');
                     $cache->delete($payment->courseid);
@@ -82,7 +84,7 @@ if ($payment->status !== 'completed') {
                     debugging('Cache clear failed: ' . $e->getMessage(), DEBUG_DEVELOPER);
                 }
 
-                availability_stripepayment_send_payment_notifications($payment, $stripeSession);
+                availability_stripepayment_send_payment_notifications($payment, $stripesession);
             }
         } catch (\Exception $e) {
             debugging('Stripe verify error: ' . $e->getMessage(), DEBUG_DEVELOPER);
@@ -92,11 +94,11 @@ if ($payment->status !== 'completed') {
 
 $course = $DB->get_record('course', ['id' => $payment->courseid]);
 
-$PAGE->set_url('/availability/condition/stripepayment/success.php', ['sessionid' => $sessionId]);
+$PAGE->set_url('/availability/condition/stripepayment/success.php', ['sessionid' => $sessionid]);
 $PAGE->set_title(get_string('payment_successful_title', 'availability_stripepayment'));
 $PAGE->set_heading($course->fullname);
 
-$redirectUrl = new moodle_url('/mod/' . $cm->modname . '/view.php', ['id' => $cm->id]);
+$redirecturl = new moodle_url('/mod/' . $cm->modname . '/view.php', ['id' => $cm->id]);
 
 echo $OUTPUT->header();
 
@@ -126,7 +128,7 @@ echo html_writer::tag(
 echo html_writer::tag(
     'li',
     '<strong>' . get_string('payment_detail_id', 'availability_stripepayment') .
-    ':</strong> ' . s($sessionId)
+    ':</strong> ' . s($sessionid)
 );
 
 echo html_writer::end_tag('ul');
@@ -134,7 +136,7 @@ echo html_writer::end_div();
 
 echo html_writer::div(
     html_writer::link(
-        $redirectUrl,
+        $redirecturl,
         get_string('continue_to_activity', 'availability_stripepayment', s($cm->name)),
         ['class' => 'btn btn-primary btn-lg']
     ),
@@ -146,7 +148,7 @@ echo html_writer::div('', 'availability-stripepayment-redirect-countdown', [
 ]);
 
 $PAGE->requires->js_call_amd('availability_stripepayment/success', 'init', [
-    $redirectUrl->out(false),
+    $redirecturl->out(false),
     get_string('second', 'availability_stripepayment'),
     get_string('seconds', 'availability_stripepayment'),
     get_string('redirecting_prefix', 'availability_stripepayment'),
@@ -154,5 +156,4 @@ $PAGE->requires->js_call_amd('availability_stripepayment/success', 'init', [
 ]);
 
 echo html_writer::end_div();
-
 echo $OUTPUT->footer();
