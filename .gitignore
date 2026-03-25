@@ -24,7 +24,7 @@ vendor/stripe/stripe-php/README.md
 .project
 .buildpath
 .settings/
-
+moodle-plugin-ci.phar
 # ---------------------------------------------------------------
 # OS-generated junk
 # ---------------------------------------------------------------
