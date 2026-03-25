@@ -452,3 +452,215 @@ $DB->set_field(
 rebuild_course_cache($course->id, true);
 
 The $showc array determines if the course modules will be shown or invisible when not available.
+PS C:\Users\web2\ci-fix\ci> php vendor/bin/phpcs --standard=moodle C:\laragon\www\moodle\availability\condition\stripepayment\webhook.php
+
+FILE: C:\laragon\www\moodle\availability\condition\stripepayment\webhook.php
+----------------------------------------------------------------------------------------------
+FOUND 0 ERRORS AND 12 WARNINGS AFFECTING 12 LINES
+----------------------------------------------------------------------------------------------
+  25 | WARNING | Inline comments must end in full-stops, exclamation marks, or question marks
+  58 | WARNING | Inline comments must end in full-stops, exclamation marks, or question marks
+  69 | WARNING | Inline comments must end in full-stops, exclamation marks, or question marks
+ 102 | WARNING | Inline comments must end in full-stops, exclamation marks, or question marks
+ 108 | WARNING | Inline comments must end in full-stops, exclamation marks, or question marks
+ 114 | WARNING | Inline comments must end in full-stops, exclamation marks, or question marks
+ 124 | WARNING | Inline comments must end in full-stops, exclamation marks, or question marks
+ 143 | WARNING | Inline comments must end in full-stops, exclamation marks, or question marks
+ 153 | WARNING | Inline comments must end in full-stops, exclamation marks, or question marks
+ 163 | WARNING | Inline comments must end in full-stops, exclamation marks, or question marks
+ 174 | WARNING | Inline comments must end in full-stops, exclamation marks, or question marks
+ 188 | WARNING | Inline comments must end in full-stops, exclamation marks, or question marks
+----------------------------------------------------------------------------------------------
+
+Time: 3.36 secs; Memory: 12MB
+
+PS C:\Users\web2\ci-fix\ci> php vendor/bin/phpcs --standard=moodle C:\laragon\www\moodle\availability\condition\stripepayment\activity_report.php
+
+FILE: C:\laragon\www\moodle\availability\condition\stripepayment\activity_report.php
+----------------------------------------------------------------------------------------------
+FOUND 0 ERRORS AND 7 WARNINGS AFFECTING 6 LINES
+----------------------------------------------------------------------------------------------
+  42 | WARNING | Inline comments must start with a capital letter, digit or 3-dots sequence
+  54 | WARNING | Inline comments must start with a capital letter, digit or 3-dots sequence
+  78 | WARNING | Inline comments must start with a capital letter, digit or 3-dots sequence
+  83 | WARNING | Line exceeds 132 characters; contains 134 characters
+ 114 | WARNING | Inline comments must start with a capital letter, digit or 3-dots sequence
+ 114 | WARNING | Inline comments must end in full-stops, exclamation marks, or question marks
+ 116 | WARNING | Inline comments must start with a capital letter, digit or 3-dots sequence
+----------------------------------------------------------------------------------------------
+
+Time: 3.51 secs; Memory: 12MB
+
+PS C:\Users\web2\ci-fix\ci> php vendor/bin/phpcs --standard=moodle C:\laragon\www\moodle\availability\condition\stripepayment\db\upgrade.php
+PS C:\Users\web2\ci-fix\ci> php vendor/bin/phpcs --standard=moodle C:\laragon\www\moodle\availability\condition\stripepayment\settings.php
+PS C:\Users\web2\ci-fix\ci> php vendor/bin/phpcs --standard=moodle C:\laragon\www\moodle\availability\condition\stripepayment\payment.php
+PS C:\Users\web2\ci-fix\ci> php vendor/bin/phpcs --standard=moodle C:\laragon\www\moodle\availability\condition\stripepayment\transactions.php
+
+FILE: C:\laragon\www\moodle\availability\condition\stripepayment\transactions.php
+---------------------------------------------------------------------------------
+FOUND 0 ERRORS AND 1 WARNING AFFECTING 1 LINE
+---------------------------------------------------------------------------------
+ 176 | WARNING | Line exceeds 132 characters; contains 139 characters
+---------------------------------------------------------------------------------
+
+Time: 3.59 secs; Memory: 12MB
+
+PS C:\Users\web2\ci-fix\ci> php vendor/bin/phpcs --standard=moodle C:\laragon\www\moodle\availability\condition\stripepayment\version.php
+PS C:\Users\web2\ci-fix\ci> php vendor/bin/phpcs --standard=moodle C:\laragon\www\moodle\availability\condition\stripepayment\db\access.php
+PS C:\Users\web2\ci-fix\ci> php vendor/bin/phpcs --standard=moodle C:\laragon\www\moodle\availability\condition\stripepayment\classes\transactions_table.php
+
+
+FILE: C:\laragon\www\moodle\availability\condition\stripepayment\classes\transactions_table.php
+-----------------------------------------------------------------------------------------------
+FOUND 0 ERRORS AND 16 WARNINGS AFFECTING 11 LINES
+-----------------------------------------------------------------------------------------------
+ 170 | WARNING | Line exceeds 132 characters; contains 136 characters
+ 233 | WARNING | Line exceeds 132 characters; contains 161 characters
+ 306 | WARNING | Line exceeds 132 characters; contains 136 characters
+ 314 | WARNING | Line exceeds 132 characters; contains 139 characters
+ 324 | WARNING | Line exceeds 132 characters; contains 135 characters
+ 341 | WARNING | Inline comments must start with a capital letter, digit or 3-dots sequence
+ 341 | WARNING | Inline comments must end in full-stops, exclamation marks, or question marks
+ 347 | WARNING | Line exceeds 132 characters; contains 137 characters
+ 367 | WARNING | Inline comments must start with a capital letter, digit or 3-dots sequence
+ 367 | WARNING | Inline comments must end in full-stops, exclamation marks, or question marks
+ 368 | WARNING | Inline comments must start with a capital letter, digit or 3-dots sequence
+ 368 | WARNING | Inline comments must end in full-stops, exclamation marks, or question marks
+ 369 | WARNING | Inline comments must start with a capital letter, digit or 3-dots sequence
+ 369 | WARNING | Inline comments must end in full-stops, exclamation marks, or question marks
+ 370 | WARNING | Inline comments must start with a capital letter, digit or 3-dots sequence
+ 370 | WARNING | Inline comments must end in full-stops, exclamation marks, or question marks
+-----------------------------------------------------------------------------------------------
+
+Time: 3.28 secs; Memory: 14MB
+
+PS C:\Users\web2\ci-fix\ci> php vendor/bin/phpcs --standard=moodle C:\laragon\www\moodle\availability\condition\stripepayment\classes\task\cleanup_pending_payments.php
+PS C:\Users\web2\ci-fix\ci> php vendor/bin/phpcs --standard=moodle C:\laragon\www\moodle\availability\condition\stripepayment\classes\condition.php
+
+FILE: C:\laragon\www\moodle\availability\condition\stripepayment\classes\condition.php
+----------------------------------------------------------------------------------------------
+FOUND 4 ERRORS AND 2 WARNINGS AFFECTING 5 LINES
+----------------------------------------------------------------------------------------------
+  93 | ERROR   | Missing docblock for function is_available
+ 110 | ERROR   | Missing docblock for function get_description
+ 114 | ERROR   | Missing docblock for function get_either_description
+ 185 | WARNING | Inline comments must start with a capital letter, digit or 3-dots sequence
+ 185 | WARNING | Inline comments must end in full-stops, exclamation marks, or question marks
+ 201 | ERROR   | Missing docblock for function get_debug_string
+----------------------------------------------------------------------------------------------
+
+Time: 3.22 secs; Memory: 12MB
+
+PS C:\Users\web2\ci-fix\ci> php vendor/bin/phpcs --standard=moodle C:\laragon\www\moodle\availability\condition\stripepayment\classes\privacy\provider.php
+PS C:\Users\web2\ci-fix\ci> php vendor/bin/phpcs --standard=moodle C:\laragon\www\moodle\availability\condition\stripepayment\activity_report.php
+
+FILE: C:\laragon\www\moodle\availability\condition\stripepayment\activity_report.php
+----------------------------------------------------------------------------------------------
+FOUND 0 ERRORS AND 7 WARNINGS AFFECTING 6 LINES
+----------------------------------------------------------------------------------------------
+  42 | WARNING | Inline comments must start with a capital letter, digit or 3-dots sequence
+  54 | WARNING | Inline comments must start with a capital letter, digit or 3-dots sequence
+  78 | WARNING | Inline comments must start with a capital letter, digit or 3-dots sequence
+  83 | WARNING | Line exceeds 132 characters; contains 134 characters
+ 114 | WARNING | Inline comments must start with a capital letter, digit or 3-dots sequence
+ 114 | WARNING | Inline comments must end in full-stops, exclamation marks, or question marks
+ 116 | WARNING | Inline comments must start with a capital letter, digit or 3-dots sequence
+----------------------------------------------------------------------------------------------
+
+Time: 3.44 secs; Memory: 12MB
+
+PS C:\Users\web2\ci-fix\ci> php vendor/bin/phpcs --standard=moodle C:\laragon\www\moodle\availability\condition\stripepayment\webhook.php
+
+FILE: C:\laragon\www\moodle\availability\condition\stripepayment\webhook.php
+----------------------------------------------------------------------------------------------
+FOUND 0 ERRORS AND 12 WARNINGS AFFECTING 12 LINES
+----------------------------------------------------------------------------------------------
+  25 | WARNING | Inline comments must end in full-stops, exclamation marks, or question marks
+  58 | WARNING | Inline comments must end in full-stops, exclamation marks, or question marks
+  69 | WARNING | Inline comments must end in full-stops, exclamation marks, or question marks
+ 102 | WARNING | Inline comments must end in full-stops, exclamation marks, or question marks
+ 108 | WARNING | Inline comments must end in full-stops, exclamation marks, or question marks
+ 114 | WARNING | Inline comments must end in full-stops, exclamation marks, or question marks
+ 124 | WARNING | Inline comments must end in full-stops, exclamation marks, or question marks
+ 143 | WARNING | Inline comments must end in full-stops, exclamation marks, or question marks
+ 153 | WARNING | Inline comments must end in full-stops, exclamation marks, or question marks
+ 163 | WARNING | Inline comments must end in full-stops, exclamation marks, or question marks
+ 174 | WARNING | Inline comments must end in full-stops, exclamation marks, or question marks
+ 188 | WARNING | Inline comments must end in full-stops, exclamation marks, or question marks
+----------------------------------------------------------------------------------------------
+
+Time: 3.42 secs; Memory: 12MB
+
+PS C:\Users\web2\ci-fix\ci> php vendor/bin/phpcs --standard=moodle C:\laragon\www\moodle\availability\condition\stripepayment\lib.php
+PS C:\Users\web2\ci-fix\ci> php vendor/bin/phpcs --standard=moodle C:\laragon\www\moodle\availability\condition\stripepayment\lang\en\availability_stripepayment.php
+
+FILE: C:\laragon\www\moodle\availability\condition\stripepayment\lang\en\availability_stripepayment.php
+----------------------------------------------------------------------------------------------------------------------------------------------------------
+FOUND 0 ERRORS AND 61 WARNINGS AFFECTING 60 LINES
+----------------------------------------------------------------------------------------------------------------------------------------------------------
+  32 | WARNING | Unexpected comment found. Auto-fixing will not work after this comment
+  33 | WARNING | The string key "enable" is not in the correct order, it should be before "title"
+  41 | WARNING | The string key "accounts_email" is not in the correct order, it should be before "webhook_secret_desc"
+  45 | WARNING | The string key "settings_transactions_admin" is not in the correct order, it should be before "settings_transactions_link"
+  47 | WARNING | The string key "dot" is not in the correct order, it should be before "status_ok"
+  48 | WARNING | Unexpected comment found. Auto-fixing will not work after this comment
+  49 | WARNING | The string key "amount" is not in the correct order, it should be before "dot"
+  54 | WARNING | Unexpected comment found. Auto-fixing will not work after this comment
+  57 | WARNING | The string key "payment_required" is not in the correct order, it should be before "payment_required_desc"
+  58 | WARNING | The string key "payment_completed" is not in the correct order, it should be before "payment_required"
+  59 | WARNING | The string key "make_payment" is not in the correct order, it should be before "payment_completed"
+  62 | WARNING | The string key "payment_successful" is not in the correct order, it should be before "processing"
+  63 | WARNING | The string key "payment_cancelled" is not in the correct order, it should be before "payment_successful"
+  64 | WARNING | The string key "already_paid" is not in the correct order, it should be before "payment_cancelled"
+  66 | WARNING | Unexpected comment found. Auto-fixing will not work after this comment
+  68 | WARNING | The string key "payment_success_notification" is not in the correct order, it should be before "payment_successful_title"
+  69 | WARNING | The string key "payment_details" is not in the correct order, it should be before "payment_success_notification"
+  70 | WARNING | The string key "payment_detail_item" is not in the correct order, it should be before "payment_details"
+  71 | WARNING | The string key "payment_detail_amount" is not in the correct order, it should be before "payment_detail_item"
+  73 | WARNING | The string key "continue_to_activity" is not in the correct order, it should be before "payment_detail_id"
+  75 | WARNING | Unexpected comment found. Auto-fixing will not work after this comment
+  77 | WARNING | The string key "payment_failed" is not in the correct order, it should be before "stripe_not_configured"
+  78 | WARNING | The string key "error_not_configured" is not in the correct order, it should be before "payment_failed"
+  79 | WARNING | The string key "error_amount_required" is not in the correct order, it should be before "error_not_configured"
+  83 | WARNING | The string key "activity_not_found" is not in the correct order, it should be before "payment_not_found"
+  85 | WARNING | The string key "invalid_amount_admin" is not in the correct order, it should be before "no_condition_found"
+  88 | WARNING | The string key "payment_config_error" is not in the correct order, it should be before "payment_failed_declined"
+  90 | WARNING | The string key "webhook_empty_payload" is not in the correct order, it should be before "webhook_method_not_allowed"
+  93 | WARNING | The string key "webhook_invalid_payload" is not in the correct order, it should be before "webhook_secret_not_configured"
+  95 | WARNING | The string key "webhook_error" is not in the correct order, it should be before "webhook_invalid_signature"
+  96 | WARNING | The string key "webhook_already_processed" is not in the correct order, it should be before "webhook_error"
+  99 | WARNING | Unexpected comment found. Auto-fixing will not work after this comment
+ 100 | WARNING | The string key "transactionsreport" is not in the correct order, it should be before "webhook_payment_not_completed"
+ 101 | WARNING | The string key "managetransactions" is not in the correct order, it should be before "transactionsreport"
+ 102 | WARNING | The string key "id" is not in the correct order, it should be before "managetransactions"
+ 104 | WARNING | The string key "totalpayments" is not in the correct order, it should be before "transactionid"
+ 106 | WARNING | The string key "copytransactionid" is not in the correct order, it should be before "viewinstripe"
+ 108 | WARNING | The string key "downloadcsv" is not in the correct order, it should be before "filteractive"
+ 109 | WARNING | The string key "allcourses" is not in the correct order, it should be before "downloadcsv"
+ 111 | WARNING | Unexpected comment found. Auto-fixing will not work after this comment
+ 111 | WARNING | Inline comments must end in full-stops, exclamation marks, or question marks
+ 115 | WARNING | Unexpected comment found. Auto-fixing will not work after this comment
+ 117 | WARNING | The string key "tablenotexist" is not in the correct order, it should be before "unknownactivity"
+ 118 | WARNING | The string key "payments" is not in the correct order, it should be before "tablenotexist"
+ 120 | WARNING | Unexpected comment found. Auto-fixing will not work after this comment
+ 121 | WARNING | The string key "paymentreport" is not in the correct order, it should be before "payments"
+ 122 | WARNING | The string key "backtocourse" is not in the correct order, it should be before "paymentreport"
+ 125 | WARNING | The string key "completed" is not in the correct order, it should be before "pending"
+ 127 | WARNING | The string key "cancelled" is not in the correct order, it should be before "failed"
+ 129 | WARNING | The string key "clearfilter" is not in the correct order, it should be before "expired"
+ 131 | WARNING | The string key "payingstudents" is not in the correct order, it should be before "totalrevenue"
+ 132 | WARNING | The string key "nopayments" is not in the correct order, it should be before "payingstudents"
+ 134 | WARNING | The string key "activitypaymentreport" is not in the correct order, it should be before "student"
+ 136 | WARNING | Unexpected comment found. Auto-fixing will not work after this comment
+ 139 | WARNING | The string key "privacy:metadata:payments:courseid" is not in the correct order, it should be before "privacy:metadata:payments:userid"
+ 140 | WARNING | The string key "privacy:metadata:payments:cmid" is not in the correct order, it should be before "privacy:metadata:payments:courseid"
+ 142 | WARNING | The string key "privacy:metadata:payments:amount" is not in the correct order, it should be before "privacy:metadata:payments:sessionid"
+ 147 | WARNING | Unexpected comment found. Auto-fixing will not work after this comment
+ 150 | WARNING | Unexpected comment found. Auto-fixing will not work after this comment
+ 151 | WARNING | The string key "payment_in_progress" is not in the correct order, it should be before "task_cleanup_pending"
+ 153 | WARNING | Unexpected comment found. Auto-fixing will not work after this comment
+----------------------------------------------------------------------------------------------------------------------------------------------------------
+
+Time: 3.36 secs; Memory: 12MB
+
+PS C:\Users\web2\ci-fix\ci>
