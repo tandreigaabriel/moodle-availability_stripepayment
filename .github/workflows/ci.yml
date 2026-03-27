@@ -9,21 +9,26 @@ jobs:
     runs-on: ubuntu-22.04
 
     strategy:
+      fail-fast: false
       matrix:
-        php: ["8.3"]
-        moodle-branch: ["MOODLE_405_STABLE"]
+        php: ["8.2", "8.3"]
+        moodle-branch: ["MOODLE_404_STABLE", "MOODLE_405_STABLE"]
         database: ["mariadb"]
 
     services:
       mariadb:
-        image: mariadb:10
+        image: mariadb:10.6
         env:
           MYSQL_ALLOW_EMPTY_PASSWORD: "true"
           MYSQL_CHARACTER_SET_SERVER: "utf8mb4"
           MYSQL_COLLATION_SERVER: "utf8mb4_unicode_ci"
         ports:
           - 3306:3306
-        options: --health-cmd="mysqladmin ping" --health-interval 10s --health-timeout 5s --health-retries 3
+        options: >-
+          --health-cmd="mysqladmin ping"
+          --health-interval 10s
+          --health-timeout 5s
+          --health-retries 3
 
     steps:
       - name: Checkout plugin
@@ -35,6 +40,7 @@ jobs:
         uses: shivammathur/setup-php@v2
         with:
           php-version: ${{ matrix.php }}
+          extensions: mysqli, pdo, mbstring, curl, xml, zip, intl
 
       - name: Install moodle-plugin-ci
         run: |
