@@ -103,6 +103,7 @@ function availability_stripepayment_find_condition($tree)
  *
  * @param \core_availability\tree $tree The availability tree.
  * @return \availability_stripepayment\condition|null The condition object, or null if not found.
+ * @throws ReflectionException
  */
 function availability_stripepayment_find_in_availability_tree($tree)
 {
