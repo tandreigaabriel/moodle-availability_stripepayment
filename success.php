@@ -18,7 +18,7 @@
  * Payment success page — verifies payment and redirects to the activity.
  *
  * @package    availability_stripepayment
- * @copyright  2025 Andrei Toma
+ * @copyright  2026 Andrei Toma
  * @license    http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
  */
 
