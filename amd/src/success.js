@@ -17,7 +17,7 @@
  * AMD module for the payment success page countdown redirect.
  *
  * @module     availability_stripepayment/success
- * @copyright  2025 Andrei Toma <https://www.tagwebdesign.co.uk>
+ * @copyright  2026 Andrei Toma <https://www.tagwebdesign.co.uk>
  * @license    https://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
  */
 define([], function() {

@@ -18,7 +18,7 @@
  * Upgrade steps for the Stripe availability condition.
  *
  * @package    availability_stripepayment
- * @copyright  2025 Andrei Toma
+ * @copyright  2026 Andrei Toma
  * @license    https://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
  */
 

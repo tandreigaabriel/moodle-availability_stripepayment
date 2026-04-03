@@ -22,7 +22,7 @@
  * @author     Andrei Toma
  * @authorurl  https://www.tagwebdesign.co.uk
  * @donate     https://www.paypal.com/donate/?hosted_button_id=YZCJJMZVMN53E
- * @copyright  2025 Andrei Toma <https://www.tagwebdesign.co.uk>
+ * @copyright  2026 Andrei Toma <https://www.tagwebdesign.co.uk>
  * @license    https://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
  */
 
