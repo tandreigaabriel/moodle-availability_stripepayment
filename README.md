@@ -267,41 +267,32 @@ If this plugin saves you time, please consider supporting its development via th
 
 This plugin is free software: you can redistribute it and/or modify it under the terms of the [GNU General Public License](https://www.gnu.org/licenses/gpl-3.0.html) as published by the Free Software Foundation, either version 3 of the License, or any later version.
 
-Copyright &copy; 2025 Andrei Toma — [tagwebdesign.co.uk](https://www.tagwebdesign.co.uk)
+Copyright &copy; 2026 Andrei Toma — [tagwebdesign.co.uk](https://www.tagwebdesign.co.uk)
 
 ---
 
 ## Changelog
 
-### 1.3.6
+### 1.3.3
 
+- Fixed accounts team and admin email notifications not being sent — `success.php` now sends notifications immediately when the student returns from Stripe, resolving a race condition where the webhook saw the payment already completed and skipped the notification step
+- Replaced plain-text HTML email bodies with branded Bootstrap-style HTML templates featuring a header band, styled details table, and action buttons
+- Added `require_capability('moodle/course:view', ...)` to `payment.php` and `success.php` — only enrolled users with course access can initiate or confirm a payment
+- Moved `$PAGE->set_context()` in `success.php` to immediately after the course module is resolved, before any output or capability check
+- Removed incorrect `$USER` override in `webhook.php` — `NO_MOODLE_COOKIES` already prevents session loading for the server-to-server webhook request
+- Fixed incomplete GPL licence header in `classes/privacy/provider.php`
+- Added GitHub Actions CI pipeline (`.github/workflows/ci.yml`) using `moodlehq/moodle-plugin-ci` — runs PHP lint, code checker, PHPDoc, Mustache lint, Grunt AMD build check, and PHPUnit across PHP 8.1/8.2/8.3 and Moodle 4.5 stable + main
+- Migrated availability condition form editor from legacy YUI to an AMD ES6 module (`amd/src/form.js`) — `frontend.php` now overrides `include_javascript()` and loads via `js_call_amd()`, removing the YUI dependency from the teacher-facing form UI
+- Moved success-page countdown redirect from inline PHP `echo html_writer::script()` to a dedicated AMD module (`amd/src/success.js`) to comply with Moodle JS coding standards
+- Added GPL licence headers to all four YUI build/source files (retained for reference; no longer loaded at runtime)
+- Added explanatory comments to `webhook.php` clarifying that (a) `NO_MOODLE_COOKIES` etc. are Moodle core bootstrap constants and are exempt from the Frankenstyle prefix rule, and (b) the `$DB->update_record()` call is protected by Stripe cryptographic signature verification, not a Moodle capability check
+- Fixed non-ASCII box-drawing characters in `classes/transactions_table.php` comments (I18N002)
 - Fixed `classes/hook/output/before_http_headers.php` incorrectly extending the final core hook class `\core\hook\output\before_http_headers` — caused a PHP fatal error on every request, silently preventing redirects (e.g. the Save button on `admin/upgradesettings.php` did nothing)
 - Removed the now-redundant hook callback registration from `db/hooks.php` — the callback was intentionally empty as Moodle loads plugin CSS automatically
 - Fixed CSV export in the site-wide transactions report downloading Bootstrap HTML summary card markup alongside data rows — added an `is_downloading()` early-return guard to the `start_output()` override in `classes/transactions_table.php`
 - Fixed Moodle debugging warning "name fields missing from user object" on the per-activity report — added `firstnamephonetic`, `lastnamephonetic`, `middlename`, and `alternatename` to the SQL query in `activity_report.php` so `fullname()` has all required fields
 - Fixed PHPCS violations: renamed `$transactions_url` → `$transactionsurl` in `settings.php`; corrected Allman-style opening braces to K&R style across all methods in `classes/condition.php`; removed trailing whitespace, fixed overlong line, and removed blank line before `catch` in `payment.php`
 - Replaced all hard-coded English strings in `lib.php` (`send_payment_notifications`) and `transactions.php` with `get_string()` calls; added corresponding entries to `lang/en/availability_stripepayment.php`
-
-### 1.3.5
-
-- Migrated availability condition form editor from legacy YUI to an AMD ES6 module (`amd/src/form.js`) — `frontend.php` now overrides `include_javascript()` and loads via `js_call_amd()`, removing the YUI dependency from the teacher-facing form UI
-- Moved success-page countdown redirect from inline PHP `echo html_writer::script()` to a dedicated AMD module (`amd/src/success.js`) to comply with Moodle JS coding standards
-- Added GPL licence headers to all four YUI build/source files (retained for reference; no longer loaded at runtime)
-- Added explanatory comments to `webhook.php` clarifying that (a) `NO_MOODLE_COOKIES` etc. are Moodle core bootstrap constants and are exempt from the Frankenstyle prefix rule, and (b) the `$DB->update_record()` call is protected by Stripe cryptographic signature verification, not a Moodle capability check
-- Fixed non-ASCII box-drawing characters in `classes/transactions_table.php` comments (I18N002)
-
-### 1.3.4
-
-- Added `require_capability('moodle/course:view', ...)` to `payment.php` and `success.php` — only enrolled users with course access can initiate or confirm a payment
-- Moved `$PAGE->set_context()` in `success.php` to immediately after the course module is resolved, before any output or capability check
-- Removed incorrect `$USER` override in `webhook.php` — `NO_MOODLE_COOKIES` already prevents session loading for the server-to-server webhook request
-- Fixed incomplete GPL licence header in `classes/privacy/provider.php`
-- Added GitHub Actions CI pipeline (`.github/workflows/ci.yml`) using `moodlehq/moodle-plugin-ci` — runs PHP lint, code checker, PHPDoc, Mustache lint, Grunt AMD build check, and PHPUnit across PHP 8.1/8.2/8.3 and Moodle 4.5 stable + main
-
-### 1.3.3
-
-- Fixed accounts team and admin email notifications not being sent — `success.php` now sends notifications immediately when the student returns from Stripe, resolving a race condition where the webhook saw the payment already completed and skipped the notification step
-- Replaced plain-text HTML email bodies with branded Bootstrap-style HTML templates featuring a header band, styled details table, and action buttons
 
 ### 1.3.2
 
