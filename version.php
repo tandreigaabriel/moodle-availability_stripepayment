@@ -18,7 +18,7 @@
  * Version information for the Stripe availability condition.
  *
  * @package    availability_stripepayment
- * @version    1.3.6
+ * @version    1.3.3
  * @author     Andrei Toma
  * @authorurl  https://www.tagwebdesign.co.uk
  * @donate     https://www.paypal.com/donate/?hosted_button_id=YZCJJMZVMN53E
