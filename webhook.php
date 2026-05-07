@@ -22,7 +22,7 @@
  * @license    https://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
  */
 
-// Core Moodle bootstrap constants (required before config.php)
+// Core Moodle bootstrap constants (required before config.php).
 define('NO_MOODLE_COOKIES', true);
 define('NO_DEBUG_DISPLAY', true);
 define('NO_UPGRADE_CHECK', true);
@@ -55,7 +55,7 @@ if (!isset($_SERVER['HTTP_STRIPE_SIGNATURE'])) {
 
 $sigheader = $_SERVER['HTTP_STRIPE_SIGNATURE'];
 
-// Plugin config
+// Plugin config.
 $config = get_config('availability_stripepayment');
 
 if (empty($config->webhook_secret)) {
@@ -64,9 +64,7 @@ if (empty($config->webhook_secret)) {
     exit(get_string('webhook_secret_not_configured', 'availability_stripepayment'));
 }
 
-// ------------------------------------------------------
-// Verify Stripe signature (PRIMARY SECURITY MECHANISM)
-// ------------------------------------------------------
+// Verify Stripe signature (PRIMARY SECURITY MECHANISM).
 
 // Security note:
 // This is a Stripe webhook endpoint and does not use Moodle user sessions.
@@ -97,21 +95,19 @@ try {
     exit(get_string('webhook_error', 'availability_stripepayment'));
 }
 
-// ------------------------------------------------------
-// Process Stripe events
-// ------------------------------------------------------
+// Process Stripe events.
 
 try {
     if ($event->type === 'checkout.session.completed') {
         $session = $event->data->object;
 
-        // Basic payload validation
+        // Basic payload validation.
         if (empty($session->id)) {
             http_response_code(400);
             exit(get_string('webhook_invalid_payload', 'availability_stripepayment'));
         }
 
-        // Ensure payment actually succeeded
+        // Ensure payment actually succeeded.
         if ($session->payment_status !== 'paid') {
             http_response_code(200);
             echo json_encode([
@@ -121,7 +117,7 @@ try {
             exit;
         }
 
-        // Find payment record
+        // Find payment record.
         $payment = $DB->get_record('availability_stripepayment_payments', [
             'stripe_session_id' => $session->id,
         ]);
@@ -140,7 +136,7 @@ try {
             exit;
         }
 
-        // Prevent duplicate processing
+        // Prevent duplicate processing.
         if ($payment->status === 'completed') {
             http_response_code(200);
             echo json_encode([
@@ -150,7 +146,7 @@ try {
             exit;
         }
 
-        // Safe DB transaction
+        // Safe DB transaction.
         $transaction = $DB->start_delegated_transaction();
 
         $payment->status = 'completed';
@@ -160,7 +156,7 @@ try {
 
         $transaction->allow_commit();
 
-        // Clear course module cache so activity unlocks immediately
+        // Clear course module cache so activity unlocks immediately.
         try {
             $cache = \cache::make('core', 'coursemodinfo');
             $cache->delete($payment->courseid);
@@ -171,7 +167,7 @@ try {
             );
         }
 
-        // Send notifications if implemented
+        // Send notifications if implemented.
         if (function_exists('availability_stripepayment_send_payment_notifications')) {
             availability_stripepayment_send_payment_notifications($payment, $session);
         }
@@ -183,9 +179,7 @@ try {
     );
 }
 
-// ------------------------------------------------------
-// Always return 200 so Stripe does not retry
-// ------------------------------------------------------
+// Always return 200 so Stripe does not retry.
 
 http_response_code(200);
 echo json_encode([

@@ -39,7 +39,7 @@ $PAGE->set_heading($course->fullname);
 require_login($course, false, $cm);
 require_capability('moodle/course:manageactivities', $context);
 
-// --- Statistics ---
+// Statistics.
 $completed = $DB->count_records('availability_stripepayment_payments', ['cmid' => $cmid, 'status' => 'completed']);
 $pending   = $DB->count_records('availability_stripepayment_payments', ['cmid' => $cmid, 'status' => 'pending']);
 
@@ -51,7 +51,7 @@ $revenuerows = $DB->get_records_sql(
     ['cmid' => $cmid]
 );
 
-// --- All payments for this activity ---
+// All payments for this activity.
 $payments = $DB->get_records_sql(
     "SELECT p.id, p.userid, p.amount, p.currency, p.status, p.timecreated,
             u.firstname, u.lastname, u.email,
@@ -76,12 +76,15 @@ echo html_writer::link(
 
 echo html_writer::tag('h2', s($cm->name) . ': ' . get_string('paymentreport', 'availability_stripepayment'), ['class' => 'mb-4']);
 
-// --- Stats cards (Bootstrap 5) ---
+// Stats cards (Bootstrap 5).
 echo html_writer::start_div('row g-3 mb-4');
 
 echo html_writer::start_div('col-sm-6 col-lg-4');
 echo html_writer::start_div('card h-100 border-success');
-echo html_writer::div(get_string('completedpayments', 'availability_stripepayment'), 'card-header bg-success text-white fw-semibold');
+echo html_writer::div(
+    get_string('completedpayments', 'availability_stripepayment'),
+    'card-header bg-success text-white fw-semibold'
+);
 echo html_writer::start_div('card-body text-center');
 echo html_writer::tag('h3', $completed, ['class' => 'card-title text-success mb-0']);
 echo html_writer::end_div();
@@ -112,9 +115,9 @@ foreach ($revenuerows as $rev) {
     echo html_writer::end_div();
 }
 
-echo html_writer::end_div(); // row
+echo html_writer::end_div(); // End of row.
 
-// --- Payments table ---
+// Payments table.
 echo html_writer::tag('h3', get_string('payingstudents', 'availability_stripepayment'), ['class' => 'mt-2 mb-3']);
 
 if ($payments) {

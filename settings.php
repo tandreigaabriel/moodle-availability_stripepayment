@@ -25,7 +25,7 @@
 defined('MOODLE_INTERNAL') || die();
 
 if ($hassiteconfig && isset($settings)) {
-    // Enable plugin
+    // Enable plugin.
     $settings->add(new admin_setting_configcheckbox(
         'availability_stripepayment/enabled',
         get_string('enable', 'availability_stripepayment'),
@@ -33,7 +33,7 @@ if ($hassiteconfig && isset($settings)) {
         0
     ));
 
-    // Stripe publishable key
+    // Stripe publishable key.
     $settings->add(new admin_setting_configtext(
         'availability_stripepayment/stripe_publishable_key',
         get_string('stripe_publishable_key', 'availability_stripepayment'),
@@ -42,7 +42,7 @@ if ($hassiteconfig && isset($settings)) {
         PARAM_TEXT
     ));
 
-    // Stripe secret key
+    // Stripe secret key.
     $settings->add(new admin_setting_configtext(
         'availability_stripepayment/stripe_secret_key',
         get_string('stripe_secret_key', 'availability_stripepayment'),
@@ -51,7 +51,7 @@ if ($hassiteconfig && isset($settings)) {
         PARAM_TEXT
     ));
 
-    // Webhook secret
+    // Webhook secret.
     $settings->add(new admin_setting_configtext(
         'availability_stripepayment/webhook_secret',
         get_string('webhook_secret', 'availability_stripepayment'),
@@ -60,7 +60,7 @@ if ($hassiteconfig && isset($settings)) {
         PARAM_TEXT
     ));
 
-    // Accounts email
+    // Accounts email.
     $settings->add(new admin_setting_configtext(
         'availability_stripepayment/accounts_email',
         get_string('accounts_email', 'availability_stripepayment'),
@@ -69,7 +69,7 @@ if ($hassiteconfig && isset($settings)) {
         PARAM_EMAIL
     ));
 
-    // Transactions page
+    // Transactions page.
     $transactionsurl = new moodle_url('/availability/condition/stripepayment/transactions.php');
     $settings->add(new admin_setting_description(
         'availability_stripepayment/transactions_link',
