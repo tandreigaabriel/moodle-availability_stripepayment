@@ -273,6 +273,12 @@ Copyright &copy; 2026 Andrei Toma — [tagwebdesign.co.uk](https://www.tagwebdes
 
 ## Changelog
 
+### 1.4.0
+
+- Added translations for Italian (`it`), Spanish (`es`), Romanian (`ro`), Greek (`el`), Swedish (`sv`), and Finnish (`fi`)
+- Added Moodle 5.0 (`MOODLE_500_STABLE`) to the GitHub Actions CI matrix — plugin now tested against both Moodle 4.5 and 5.0 on PHP 8.2 and 8.3
+- Fixed Mustache lint CI step — corrected the path to the installed plugin location within the Moodle directory so `moodle-plugin-ci mustache` no longer fails with a "not within basename" error
+
 ### 1.3.3
 
 - Fixed accounts team and admin email notifications not being sent — `success.php` now sends notifications immediately when the student returns from Stripe, resolving a race condition where the webhook saw the payment already completed and skipped the notification step
