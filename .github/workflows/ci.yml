@@ -70,4 +70,4 @@ jobs:
         run: moodle-plugin-ci validate ./plugin
 
       - name: Mustache Lint
-        run: moodle-plugin-ci mustache ./plugin
+        run: moodle-plugin-ci mustache moodle/availability/condition/stripepayment
