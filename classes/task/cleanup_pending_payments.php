@@ -24,8 +24,6 @@
 
 namespace availability_stripepayment\task;
 
-defined('MOODLE_INTERNAL') || die();
-
 /**
  * Marks pending payment records older than 48 hours as 'expired'.
  *
@@ -33,7 +31,6 @@ defined('MOODLE_INTERNAL') || die();
  * after 48 hours was abandoned and will never be completed.
  */
 class cleanup_pending_payments extends \core\task\scheduled_task {
-
     /**
      * Return the task name shown in the admin scheduled-tasks UI.
      *

@@ -22,8 +22,6 @@
  * @license    https://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
  */
 
-defined('MOODLE_INTERNAL') || die();
-
 /**
  * Add a "Stripe payments" link to the course Reports section in the navigation.
  *
@@ -32,8 +30,7 @@ defined('MOODLE_INTERNAL') || die();
  * @param \context $context The course context.
  * @return void
  */
-function availability_stripepayment_extend_navigation_course($navigation, $course, $context)
-{
+function availability_stripepayment_extend_navigation_course($navigation, $course, $context) {
     if (
         !has_capability('availability/stripepayment:managetransactions', $context) &&
         !has_capability('moodle/course:manageactivities', $context)
@@ -60,8 +57,7 @@ function availability_stripepayment_extend_navigation_course($navigation, $cours
  * @param int $cmid The course module ID.
  * @return bool True if a completed payment exists, false otherwise.
  */
-function availability_stripepayment_has_paid($userid, $cmid)
-{
+function availability_stripepayment_has_paid($userid, $cmid) {
     global $DB;
 
     return $DB->record_exists('availability_stripepayment_payments', [
@@ -77,8 +73,7 @@ function availability_stripepayment_has_paid($userid, $cmid)
  * @param mixed $tree The availability tree or condition node.
  * @return \availability_stripepayment\condition|null The condition object, or null if not found.
  */
-function availability_stripepayment_find_condition($tree)
-{
+function availability_stripepayment_find_condition($tree) {
     if (!$tree) {
         return null;
     }
@@ -105,8 +100,7 @@ function availability_stripepayment_find_condition($tree)
  * @return \availability_stripepayment\condition|null The condition object, or null if not found.
  * @throws ReflectionException
  */
-function availability_stripepayment_find_in_availability_tree($tree)
-{
+function availability_stripepayment_find_in_availability_tree($tree) {
     $reflection = new ReflectionClass($tree);
     $prop = $reflection->getProperty('children');
     $prop->setAccessible(true);
@@ -125,8 +119,7 @@ function availability_stripepayment_find_in_availability_tree($tree)
  * @param array $children Array of availability condition nodes.
  * @return \availability_stripepayment\condition|null The condition object, or null if not found.
  */
-function availability_stripepayment_find_in_children(array $children)
-{
+function availability_stripepayment_find_in_children(array $children) {
     foreach ($children as $child) {
         if (is_a($child, 'availability_stripepayment\\condition')) {
             return $child;
@@ -152,8 +145,7 @@ function availability_stripepayment_find_in_children(array $children)
  * @param string $currency The ISO 4217 currency code (uppercase).
  * @return int The new record ID.
  */
-function availability_stripepayment_create_payment($userid, $cmid, $courseid, $sessionid, $amount, $currency)
-{
+function availability_stripepayment_create_payment($userid, $cmid, $courseid, $sessionid, $amount, $currency) {
     global $DB;
 
     $payment = new stdClass();
@@ -179,8 +171,7 @@ function availability_stripepayment_create_payment($userid, $cmid, $courseid, $s
  * @param string|null $footer  Optional footer HTML appended below the table.
  * @return string HTML email body.
  */
-function availability_stripepayment_email_html($title, $heading, array $rows, $footer = null)
-{
+function availability_stripepayment_email_html($title, $heading, array $rows, $footer = null) {
     $tablerows = '';
     foreach ($rows as [$label, $value]) {
         $tablerows .= '<tr>'
@@ -215,8 +206,7 @@ function availability_stripepayment_email_html($title, $heading, array $rows, $f
  * @param \Stripe\Checkout\Session $session The Stripe checkout session object.
  * @return bool True on success, false if required data is missing.
  */
-function availability_stripepayment_send_payment_notifications($payment, $session)
-{
+function availability_stripepayment_send_payment_notifications($payment, $session) {
     global $DB, $CFG;
 
     $user = $DB->get_record('user', ['id' => $payment->userid]);
@@ -277,8 +267,7 @@ function availability_stripepayment_send_payment_notifications($payment, $sessio
  * @param string|null $htmlmessage Optional HTML message body.
  * @return bool True if the email was sent successfully.
  */
-function availability_stripepayment_send_email($to, $subject, $message, $htmlmessage = null)
-{
+function availability_stripepayment_send_email($to, $subject, $message, $htmlmessage = null) {
     global $CFG;
 
     $from = get_admin();

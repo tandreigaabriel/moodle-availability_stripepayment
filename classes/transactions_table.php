@@ -167,7 +167,10 @@ class transactions_table extends \table_sql {
      * @return string Formatted amount.
      */
     public function col_amount($data) {
-        $zerodecimal = ['BIF', 'CLP', 'DJF', 'GNF', 'JPY', 'KMF', 'KRW', 'MGA', 'PYG', 'RWF', 'UGX', 'VND', 'VUV', 'XAF', 'XOF', 'XPF'];
+        $zerodecimal = [
+            'BIF', 'CLP', 'DJF', 'GNF', 'JPY', 'KMF', 'KRW', 'MGA',
+            'PYG', 'RWF', 'UGX', 'VND', 'VUV', 'XAF', 'XOF', 'XPF',
+        ];
         $decimals = in_array(strtoupper($data->currency), $zerodecimal) ? 0 : 2;
         return number_format($data->amount, $decimals);
     }
@@ -228,9 +231,11 @@ class transactions_table extends \table_sql {
 
         $shortid = substr($data->stripe_session_id, 0, 8) . '…' . substr($data->stripe_session_id, -8);
 
+        $onclickjs = "navigator.clipboard.writeText('" . s($data->stripe_session_id) . "');"
+            . " this.innerText='✅'; setTimeout(() => this.innerText='📋', 1000);";
         $copybutton = \html_writer::tag('button', '📋', [
             'class' => 'btn btn-sm btn-outline-secondary ms-1',
-            'onclick' => "navigator.clipboard.writeText('" . s($data->stripe_session_id) . "'); this.innerText='✅'; setTimeout(() => this.innerText='📋', 1000);",
+            'onclick' => $onclickjs,
             'title' => get_string('copytransactionid', 'availability_stripepayment'),
             'type' => 'button',
         ]);
@@ -308,7 +313,10 @@ class transactions_table extends \table_sql {
               ORDER BY currency"
         );
 
-        $zerodecimal = ['BIF', 'CLP', 'DJF', 'GNF', 'JPY', 'KMF', 'KRW', 'MGA', 'PYG', 'RWF', 'UGX', 'VND', 'VUV', 'XAF', 'XOF', 'XPF'];
+        $zerodecimal = [
+            'BIF', 'CLP', 'DJF', 'GNF', 'JPY', 'KMF', 'KRW', 'MGA',
+            'PYG', 'RWF', 'UGX', 'VND', 'VUV', 'XAF', 'XOF', 'XPF',
+        ];
 
         // Row 1: three metric cards (always equal thirds).
         echo \html_writer::start_div('row g-3 mb-3');
@@ -316,7 +324,10 @@ class transactions_table extends \table_sql {
         // Total payments card.
         echo \html_writer::start_div('col-sm-6 col-lg-4');
         echo \html_writer::start_div('card h-100 border-primary');
-        echo \html_writer::div(get_string('totalpayments', 'availability_stripepayment'), 'card-header bg-primary text-white fw-semibold');
+        echo \html_writer::div(
+            get_string('totalpayments', 'availability_stripepayment'),
+            'card-header bg-primary text-white fw-semibold'
+        );
         echo \html_writer::start_div('card-body text-center');
         echo \html_writer::tag('h3', $totalpayments, ['class' => 'card-title text-primary mb-0']);
         echo \html_writer::end_div();
@@ -326,7 +337,10 @@ class transactions_table extends \table_sql {
         // Completed card.
         echo \html_writer::start_div('col-sm-6 col-lg-4');
         echo \html_writer::start_div('card h-100 border-success');
-        echo \html_writer::div(get_string('completed', 'availability_stripepayment'), 'card-header bg-success text-white fw-semibold');
+        echo \html_writer::div(
+            get_string('completed', 'availability_stripepayment'),
+            'card-header bg-success text-white fw-semibold'
+        );
         echo \html_writer::start_div('card-body text-center');
         echo \html_writer::tag('h3', $completedpayments, ['class' => 'card-title text-success mb-0']);
         echo \html_writer::end_div();
@@ -343,13 +357,16 @@ class transactions_table extends \table_sql {
         echo \html_writer::end_div();
         echo \html_writer::end_div();
 
-        echo \html_writer::end_div(); // row 1
+        echo \html_writer::end_div(); // End of row 1.
 
         // Row 2: single "Revenue by currency" card.
         echo \html_writer::start_div('row g-3 mb-4');
         echo \html_writer::start_div('col-12');
         echo \html_writer::start_div('card border-warning');
-        echo \html_writer::div(get_string('totalrevenue', 'availability_stripepayment'), 'card-header bg-warning text-dark fw-semibold');
+        echo \html_writer::div(
+            get_string('totalrevenue', 'availability_stripepayment'),
+            'card-header bg-warning text-dark fw-semibold'
+        );
         echo \html_writer::start_div('card-body py-2');
 
         if ($revenuerows) {
@@ -369,10 +386,10 @@ class transactions_table extends \table_sql {
             echo \html_writer::tag('p', '—', ['class' => 'text-muted mb-0']);
         }
 
-        echo \html_writer::end_div(); // card-body
-        echo \html_writer::end_div(); // card
-        echo \html_writer::end_div(); // col-12
-        echo \html_writer::end_div(); // row 2
+        echo \html_writer::end_div(); // End of card-body.
+        echo \html_writer::end_div(); // End of card.
+        echo \html_writer::end_div(); // End of col-12.
+        echo \html_writer::end_div(); // End of row 2.
 
         parent::start_output();
     }

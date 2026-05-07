@@ -18,7 +18,7 @@
  * Stripe payment transactions report page.
  *
  * @package    availability_stripepayment
- * @copyright  2025 Andrei Toma <https://www.tagwebdesign.co.uk>
+ * @copyright  2026 Andrei Toma <https://www.tagwebdesign.co.uk>
  * @license    https://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
  */
 
@@ -163,7 +163,11 @@ echo html_writer::end_div();
 // Buttons.
 echo html_writer::start_div('d-flex gap-2 align-items-end');
 echo html_writer::tag('button', get_string('filter'), ['type' => 'submit', 'class' => 'btn btn-sm btn-primary']);
-echo html_writer::link($baseurl, get_string('clearfilter', 'availability_stripepayment'), ['class' => 'btn btn-sm btn-outline-secondary']);
+echo html_writer::link(
+    $baseurl,
+    get_string('clearfilter', 'availability_stripepayment'),
+    ['class' => 'btn btn-sm btn-outline-secondary']
+);
 echo html_writer::end_div();
 
 echo html_writer::end_tag('form');
