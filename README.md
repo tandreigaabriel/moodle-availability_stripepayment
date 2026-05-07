@@ -259,7 +259,7 @@ Developed and maintained by **Andrei Toma** at [tagwebdesign.co.uk](https://www.
 - GitHub repository: [tandreigaabriel/moodle-availability_stripepayment](https://github.com/tandreigaabriel/moodle-availability_stripepayment)
 - Bug reports & feature requests: [open an issue on GitHub](https://github.com/tandreigaabriel/moodle-availability_stripepayment/issues)
 
-If this plugin saves you time, please consider supporting its development via the website.
+If this plugin saves you time, please consider supporting its development — donations are welcome at [tandreig.com/plugins](https://www.tandreig.com/plugins).
 
 ---
 
