@@ -118,6 +118,7 @@ $string['stripe_secret_key_desc'] = 'Your Stripe secret key from the Stripe dash
 $string['stripedashboard'] = '⧉ Stripe Dashboard';
 $string['stripelink'] = '🔗 Stripe';
 $string['stripepayment:managetransactions'] = 'Manage Stripe payment transactions';
+$string['stripepayment:pay'] = 'Pay for course activities using Stripe';
 $string['student'] = 'Student';
 $string['tablenotexist'] = 'Database table {$a} does not exist';
 $string['task_cleanup_pending'] = 'Clean up expired pending payments';
