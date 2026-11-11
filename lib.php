@@ -255,6 +255,29 @@ function availability_stripepayment_send_payment_notifications($payment, $sessio
     $accountsuser = $DB->get_record('user', ['email' => $accountsemail, 'deleted' => 0]) ?: get_admin();
     email_to_user($accountsuser, core_user::get_noreply_user(), $accountssubject, $accountsmessage, $accountshtml);
 
+    // Receipt to the student who paid.
+    $studentsubject = get_string('email_student_subject', 'availability_stripepayment', $cm->name);
+    $studentmessage = get_string('email_student_body', 'availability_stripepayment') . "\n\n"
+        . get_string('email_accounts_row_activity', 'availability_stripepayment') . ': ' . $cm->name . "\n"
+        . get_string('email_accounts_row_course', 'availability_stripepayment') . ': ' . $course->fullname . "\n"
+        . get_string('amount', 'availability_stripepayment') . ': ' . $amountdisplay . "\n"
+        . get_string('payment_detail_id', 'availability_stripepayment') . ': ' . $session->id . "\n"
+        . get_string('email_accounts_row_date', 'availability_stripepayment') . ': ' . userdate(time());
+
+    $studenthtml = availability_stripepayment_email_html(
+        $studentsubject,
+        get_string('email_student_body', 'availability_stripepayment'),
+        [
+            [get_string('email_accounts_row_activity', 'availability_stripepayment'), $cm->name],
+            [get_string('email_accounts_row_course', 'availability_stripepayment'), $course->fullname],
+            [get_string('amount', 'availability_stripepayment'), $amountdisplay],
+            [get_string('payment_detail_id', 'availability_stripepayment'), $session->id],
+            [get_string('email_accounts_row_date', 'availability_stripepayment'), userdate(time())],
+        ]
+    );
+
+    email_to_user($user, core_user::get_noreply_user(), $studentsubject, $studentmessage, $studenthtml);
+
     return true;
 }
 

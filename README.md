@@ -11,9 +11,12 @@ Restrict access to any Moodle activity or resource behind a Stripe payment. Stud
 - Stripe Checkout hosted page — no card data touches your server
 - Webhook-driven access grant — access is unlocked the moment payment completes
 - Payment button rendered inline on the course page — no JavaScript DOM injection
-- Branded HTML email notifications sent to your accounts team and site admins
+- Branded HTML email notifications sent to your accounts team, site admins, **and the paying student**
 - Admin dashboard with transaction history, per-currency revenue summary, and direct Stripe links
 - Per-activity payment report for teachers — no site-admin access required
+- One-click refunds — refund a completed payment via Stripe directly from the admin report; access is revoked automatically
+- Manual access grants — teachers/admins can mark a student as paid without going through Stripe (cash, scholarship, goodwill access)
+- Integrated with the Moodle Events API — payments and refunds appear in **Reports → Logs** and can be observed by other plugins
 - Duplicate session prevention — a second click within 2 minutes is blocked server-side
 - Stale pending payments automatically cleaned up daily by a scheduled task
 - CSV export of all transactions
@@ -77,6 +80,7 @@ Download the latest release ZIP from the [Moodle plugins directory](https://mood
    ```
 4. Under **Events to listen to**, select:
    - `checkout.session.completed`
+   - `charge.refunded` (required for refunds issued from the Stripe Dashboard to revoke access automatically)
 5. Click **Add endpoint**
 6. Click **Reveal** next to **Signing secret** and copy it
 
@@ -148,10 +152,11 @@ condition.php detects completed payment → access granted
 
 Go to **Site Administration → Reports → Stripe Payment Transactions** to view:
 
-- All payments across all courses with student name, activity, amount, status, and date
+- All payments across all courses with student name, activity, amount, status, source (Stripe or manual), and date
 - Summary cards: total payments, completed, pending, and one revenue card per currency (e.g. 10.00 GBP, 20.00 USD)
 - Direct links to each transaction in the Stripe Dashboard
-- Filter by course and by status
+- A **Refund** button on any completed Stripe payment — refunds via the Stripe API and revokes access immediately (not available for manually-granted access, which has no underlying Stripe charge)
+- Filter by course and by status (including the new `refunded` status)
 - CSV export
 
 ### Per-activity report (teachers)
@@ -164,7 +169,12 @@ Teachers do not need site-admin access to see who has paid for their own activit
 The report shows:
 
 - Completed payments, pending count, and total revenue per currency for that activity
-- A table of all paying students with name, email, amount, currency, status, and date
+- A table of all paying students with name, email, amount, currency, status, source, and date
+- A **Grant access** panel listing enrolled students who don't yet have access, letting a teacher mark one as paid without Stripe (e.g. a cash payment, scholarship, or goodwill access)
+
+### Logs integration
+
+Payment completions (Stripe or manual) and refunds are logged as Moodle events (`\availability_stripepayment\event\payment_completed` and `payment_refunded`) and appear in **Site administration → Reports → Logs**, alongside all other course activity.
 
 ---
 
@@ -182,7 +192,7 @@ Use any future expiry date, any 3-digit CVC, and any postcode.
 
 ### Testing email notifications
 
-The plugin sends an internal notification email to your accounts team after every completed payment. To test this:
+The plugin sends an internal notification email to your accounts team, plus a confirmation receipt to the student, after every completed payment. To test this:
 
 1. Make sure the **Accounts email** field is filled in under **Site Administration → Plugins → Availability restrictions → Stripe Payment**
    - If left blank, the plugin falls back to `accounts@yourmoodledomain.com`
@@ -223,7 +233,7 @@ The plugin sends an internal notification email to your accounts team after ever
 ## Frequently Asked Questions
 
 **Does the student get a receipt?**
-Yes. Stripe automatically sends a payment receipt to the student's email address. No extra configuration needed.
+Yes, two ways. The plugin sends its own branded confirmation email to the student as soon as the payment completes, and Stripe may also send its own receipt if that's enabled in your Stripe Dashboard settings (**Settings → Emails**).
 
 **What happens if a student pays but doesn't get access?**
 The webhook may not have been received. Check the webhook logs in the Stripe Dashboard under **Developers → Webhooks** and use the **Resend** button.
@@ -232,7 +242,7 @@ The webhook may not have been received. Check the webhook logs in the Stripe Das
 No. The plugin checks for an existing completed payment before creating a new Stripe session. Additionally, if a student clicks Pay and then clicks again within 2 minutes, the second request is blocked server-side with a warning message.
 
 **Is refund handled automatically?**
-Not currently. If you issue a refund via Stripe, you must manually remove the payment record from the database or the student will retain access.
+Yes. Use the **Refund** button on the site-wide transactions report to refund a completed Stripe payment and revoke access in one step. If you issue the refund directly from the Stripe Dashboard instead, access is still revoked automatically — as long as the `charge.refunded` event is enabled on your webhook endpoint (see the webhook setup instructions above).
 
 **What happens to abandoned checkouts?**
 Stripe checkout sessions expire after 24 hours. The plugin's daily scheduled task automatically marks any pending payment records older than 48 hours as `expired`, keeping the transaction table clean.
@@ -272,6 +282,15 @@ Copyright &copy; 2026 Andrei Toma — [tagwebdesign.co.uk](https://www.tagwebdes
 ---
 
 ## Changelog
+
+### 1.5.0
+
+- Added a branded confirmation email sent to the student immediately when their payment completes (previously only the accounts team was emailed)
+- Added refund support: a **Refund** button on the transactions report calls the Stripe Refund API and revokes access; a new `charge.refunded` webhook handler also revokes access automatically when a refund is issued directly from the Stripe Dashboard
+- Added manual access grants — teachers/admins can mark a student as paid from the per-activity report without going through Stripe, with an audit trail of who granted it and when
+- Added Moodle Events API integration — `payment_completed` and `payment_refunded` events are triggered and appear in **Reports → Logs**
+- Added `source` and `grantedby` columns to the payments table (database upgrade required) to distinguish Stripe payments from manually-granted access
+- Updated the Privacy API provider to document the two new fields
 
 ### 1.4.0
 

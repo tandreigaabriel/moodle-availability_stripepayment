@@ -44,14 +44,19 @@ class transactions_table extends \table_sql {
             $headers[] = \core_user\fields::get_display_name($field);
         }
 
-        $columns = array_merge($columns, ['amount', 'currency', 'status', 'stripe_session_id', 'timecreated', 'stripe_link']);
+        $columns = array_merge(
+            $columns,
+            ['amount', 'currency', 'status', 'source', 'stripe_session_id', 'timecreated', 'stripe_link', 'actions']
+        );
         $headers = array_merge($headers, [
             get_string('amount', 'availability_stripepayment'),
             get_string('currency', 'availability_stripepayment'),
             get_string('status'),
+            get_string('source', 'availability_stripepayment'),
             get_string('transactionid', 'availability_stripepayment'),
             get_string('time'),
             'Stripe',
+            '',
         ]);
 
         $this->define_columns($columns);
@@ -59,8 +64,8 @@ class transactions_table extends \table_sql {
 
         $userfields = \core_user\fields::for_name()->with_identity($PAGE->context)->get_sql('u');
 
-        $fields = 'p.id, p.userid, p.courseid, p.cmid, p.stripe_session_id, ' .
-            'p.amount, p.currency, p.status, p.timecreated, p.timemodified, ' .
+        $fields = 'p.id, p.userid, p.courseid, p.cmid, p.stripe_session_id, p.stripe_payment_intent, ' .
+            'p.amount, p.currency, p.status, p.source, p.timecreated, p.timemodified, ' .
             'c.shortname as course_shortname, m.name as modname_raw, cm.instance as cm_instance' .
             $userfields->selects;
 
@@ -208,9 +213,49 @@ class transactions_table extends \table_sql {
                 return \html_writer::span(get_string('cancelled', 'availability_stripepayment'), 'badge bg-secondary');
             case 'expired':
                 return \html_writer::span(get_string('expired', 'availability_stripepayment'), 'badge bg-secondary');
+            case 'refunded':
+                return \html_writer::span(get_string('refunded', 'availability_stripepayment'), 'badge bg-dark');
             default:
                 return \html_writer::span(ucfirst($data->status), 'badge bg-warning text-dark');
         }
+    }
+
+    /**
+     * Format the payment source (Stripe or manual grant).
+     *
+     * @param object $data Row data.
+     * @return string Formatted source label.
+     */
+    public function col_source($data) {
+        if ($data->source === 'manual') {
+            $label = get_string('sourcemanual', 'availability_stripepayment');
+            return $this->is_downloading() ? $label : \html_writer::span($label, 'badge bg-light text-dark border');
+        }
+
+        $label = get_string('sourcestripe', 'availability_stripepayment');
+        return $this->is_downloading() ? $label : \html_writer::span($label, 'badge bg-light text-dark border');
+    }
+
+    /**
+     * Render the refund action link for eligible completed Stripe payments.
+     *
+     * @param object $data Row data.
+     * @return string Refund link HTML, or dash if not applicable.
+     */
+    public function col_actions($data) {
+        if ($this->is_downloading()) {
+            return '';
+        }
+
+        if ($data->status !== 'completed' || $data->source !== 'stripe' || empty($data->stripe_payment_intent)) {
+            return '-';
+        }
+
+        $refundurl = new \moodle_url('/availability/condition/stripepayment/refund.php', ['id' => $data->id]);
+
+        return \html_writer::link($refundurl, get_string('refund', 'availability_stripepayment'), [
+            'class' => 'btn btn-sm btn-outline-danger',
+        ]);
     }
 
     /**

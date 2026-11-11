@@ -150,6 +150,7 @@ try {
         $transaction = $DB->start_delegated_transaction();
 
         $payment->status = 'completed';
+        $payment->stripe_payment_intent = $session->payment_intent ?? null;
         $payment->timemodified = time();
 
         $DB->update_record('availability_stripepayment_payments', $payment);
@@ -167,9 +168,52 @@ try {
             );
         }
 
+        \availability_stripepayment\event\payment_completed::create([
+            'objectid' => $payment->id,
+            'context' => \context_module::instance($payment->cmid),
+            'relateduserid' => $payment->userid,
+            'other' => ['source' => 'stripe'],
+        ])->trigger();
+
         // Send notifications if implemented.
         if (function_exists('availability_stripepayment_send_payment_notifications')) {
             availability_stripepayment_send_payment_notifications($payment, $session);
+        }
+    } else if ($event->type === 'charge.refunded') {
+        $charge = $event->data->object;
+
+        if (!empty($charge->refunded) && !empty($charge->payment_intent)) {
+            $payment = $DB->get_record('availability_stripepayment_payments', [
+                'stripe_payment_intent' => $charge->payment_intent,
+                'status' => 'completed',
+            ]);
+
+            if ($payment) {
+                $transaction = $DB->start_delegated_transaction();
+
+                $payment->status = 'refunded';
+                $payment->timemodified = time();
+
+                $DB->update_record('availability_stripepayment_payments', $payment);
+
+                $transaction->allow_commit();
+
+                try {
+                    $cache = \cache::make('core', 'coursemodinfo');
+                    $cache->delete($payment->courseid);
+                } catch (Exception $e) {
+                    debugging(
+                        '[availability_stripepayment] Cache clear error: ' . $e->getMessage(),
+                        DEBUG_DEVELOPER
+                    );
+                }
+
+                \availability_stripepayment\event\payment_refunded::create([
+                    'objectid' => $payment->id,
+                    'context' => \context_module::instance($payment->cmid),
+                    'relateduserid' => $payment->userid,
+                ])->trigger();
+            }
         }
     }
 } catch (Exception $e) {

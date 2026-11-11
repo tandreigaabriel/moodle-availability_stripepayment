@@ -58,6 +58,8 @@ class provider implements
                 'amount' => 'privacy:metadata:payments:amount',
                 'currency' => 'privacy:metadata:payments:currency',
                 'status' => 'privacy:metadata:payments:status',
+                'source' => 'privacy:metadata:payments:source',
+                'grantedby' => 'privacy:metadata:payments:grantedby',
                 'timecreated' => 'privacy:metadata:payments:timecreated',
             ],
             'privacy:metadata:payments',
@@ -148,6 +150,7 @@ class provider implements
                     'amount' => $p->amount,
                     'currency' => $p->currency,
                     'status' => $p->status,
+                    'source' => $p->source,
                     'timecreated' => transform::datetime($p->timecreated),
                 ];
             }
