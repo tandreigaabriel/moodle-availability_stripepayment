@@ -1,5 +1,5 @@
 <?xml version="1.0" encoding="UTF-8" ?>
-<XMLDB PATH="availability/condition/stripepayment/db" VERSION="20250616" COMMENT="Stripe availability condition">
+<XMLDB PATH="availability/condition/stripepayment/db" VERSION="20260712" COMMENT="Stripe availability condition">
   <TABLES>
     <TABLE NAME="availability_stripepayment_payments" COMMENT="Stripe payment records">
       <FIELDS>
@@ -17,6 +17,9 @@
 
         <FIELD NAME="status" TYPE="char" LENGTH="20" NOTNULL="true" DEFAULT="pending"/>
 
+        <FIELD NAME="source" TYPE="char" LENGTH="20" NOTNULL="true" DEFAULT="stripe" COMMENT="How the payment record was created: stripe or manual."/>
+        <FIELD NAME="grantedby" TYPE="int" LENGTH="10" NOTNULL="false" COMMENT="User ID who manually granted access, when source is manual."/>
+
         <FIELD NAME="timecreated" TYPE="int" LENGTH="10" NOTNULL="true"/>
         <FIELD NAME="timemodified" TYPE="int" LENGTH="10" NOTNULL="true"/>
       </FIELDS>
@@ -25,6 +28,7 @@
         <KEY NAME="primary" TYPE="primary" FIELDS="id"/>
         <KEY NAME="userid" TYPE="foreign" FIELDS="userid" REFTABLE="user" REFFIELDS="id"/>
         <KEY NAME="courseid" TYPE="foreign" FIELDS="courseid" REFTABLE="course" REFFIELDS="id"/>
+        <KEY NAME="grantedby" TYPE="foreign" FIELDS="grantedby" REFTABLE="user" REFFIELDS="id"/>
       </KEYS>
 
       <INDEXES>
