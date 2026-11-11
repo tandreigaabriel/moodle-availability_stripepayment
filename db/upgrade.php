@@ -29,6 +29,25 @@
  * @return bool True on success.
  */
 function xmldb_availability_stripepayment_upgrade($oldversion) {
-    // No upgrade steps needed yet.
+    global $DB;
+
+    $dbman = $DB->get_manager();
+
+    if ($oldversion < 2026071200) {
+        $table = new xmldb_table('availability_stripepayment_payments');
+
+        $field = new xmldb_field('source', XMLDB_TYPE_CHAR, '20', null, XMLDB_NOTNULL, null, 'stripe', 'status');
+        if (!$dbman->field_exists($table, $field)) {
+            $dbman->add_field($table, $field);
+        }
+
+        $field = new xmldb_field('grantedby', XMLDB_TYPE_INTEGER, '10', null, null, null, null, 'source');
+        if (!$dbman->field_exists($table, $field)) {
+            $dbman->add_field($table, $field);
+        }
+
+        upgrade_plugin_savepoint(true, 2026071200, 'availability', 'stripepayment');
+    }
+
     return true;
 }

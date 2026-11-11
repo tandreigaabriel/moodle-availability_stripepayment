@@ -69,7 +69,7 @@ if ($courseid) {
     $params['courseid'] = $courseid;
 }
 
-$validstatuses = ['completed', 'pending', 'failed', 'cancelled', 'expired'];
+$validstatuses = ['completed', 'pending', 'failed', 'cancelled', 'expired', 'refunded'];
 if ($status && in_array($status, $validstatuses)) {
     $where .= ' AND p.status = :status';
     $params['status'] = $status;
@@ -152,6 +152,7 @@ $statusoptions = [
     'failed' => get_string('failed', 'availability_stripepayment'),
     'cancelled' => get_string('cancelled', 'availability_stripepayment'),
     'expired' => get_string('expired', 'availability_stripepayment'),
+    'refunded' => get_string('refunded', 'availability_stripepayment'),
 ];
 
 echo html_writer::select($statusoptions, 'status', $status, false, [

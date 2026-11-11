@@ -53,7 +53,7 @@ $revenuerows = $DB->get_records_sql(
 
 // All payments for this activity.
 $payments = $DB->get_records_sql(
-    "SELECT p.id, p.userid, p.amount, p.currency, p.status, p.timecreated,
+    "SELECT p.id, p.userid, p.amount, p.currency, p.status, p.source, p.timecreated,
             u.firstname, u.lastname, u.email,
             u.firstnamephonetic, u.lastnamephonetic, u.middlename, u.alternatename
        FROM {availability_stripepayment_payments} p
@@ -62,6 +62,20 @@ $payments = $DB->get_records_sql(
       ORDER BY p.timecreated DESC",
     ['cmid' => $cmid]
 );
+
+$paidcompletedids = [];
+foreach ($payments as $paymentrow) {
+    if ($paymentrow->status === 'completed') {
+        $paidcompletedids[] = (int) $paymentrow->userid;
+    }
+}
+
+$eligibletogrant = [];
+foreach (get_enrolled_users($context, '', 0, 'u.*', 'u.lastname, u.firstname') as $enrolled) {
+    if (!in_array((int) $enrolled->id, $paidcompletedids, true)) {
+        $eligibletogrant[$enrolled->id] = fullname($enrolled) . ' (' . $enrolled->email . ')';
+    }
+}
 
 $zerodecimal = ['BIF', 'CLP', 'DJF', 'GNF', 'JPY', 'KMF', 'KRW', 'MGA', 'PYG', 'RWF', 'UGX', 'VND', 'VUV', 'XAF', 'XOF', 'XPF'];
 
@@ -128,6 +142,7 @@ if ($payments) {
         get_string('amount', 'availability_stripepayment'),
         get_string('currency', 'availability_stripepayment'),
         get_string('status'),
+        get_string('source', 'availability_stripepayment'),
         get_string('time'),
     ];
     $table->attributes['class'] = 'generaltable table table-striped table-hover';
@@ -154,9 +169,16 @@ if ($payments) {
             case 'expired':
                 $badge = html_writer::span(get_string('expired', 'availability_stripepayment'), 'badge bg-secondary');
                 break;
+            case 'refunded':
+                $badge = html_writer::span(get_string('refunded', 'availability_stripepayment'), 'badge bg-dark');
+                break;
             default:
                 $badge = html_writer::span(ucfirst(s($p->status)), 'badge bg-warning text-dark');
         }
+
+        $sourcelabel = $p->source === 'manual'
+            ? get_string('sourcemanual', 'availability_stripepayment')
+            : get_string('sourcestripe', 'availability_stripepayment');
 
         $table->data[] = [
             $name,
@@ -164,6 +186,7 @@ if ($payments) {
             number_format($p->amount, $decimals),
             strtoupper(s($p->currency)),
             $badge,
+            html_writer::span($sourcelabel, 'badge bg-light text-dark border'),
             userdate($p->timecreated),
         ];
     }
@@ -171,6 +194,41 @@ if ($payments) {
     echo html_writer::table($table);
 } else {
     echo $OUTPUT->notification(get_string('nopayments', 'availability_stripepayment'), 'info');
+}
+
+// Manual grant access.
+echo html_writer::tag('h3', get_string('grantaccess', 'availability_stripepayment'), ['class' => 'mt-4 mb-2']);
+echo html_writer::tag('p', get_string('grantaccessdesc', 'availability_stripepayment'), ['class' => 'text-muted small']);
+
+if ($eligibletogrant) {
+    echo html_writer::start_tag('form', [
+        'method' => 'post',
+        'action' => new moodle_url('/availability/condition/stripepayment/grant_access.php'),
+        'class' => 'd-flex flex-wrap align-items-end gap-3 mb-4',
+    ]);
+    echo html_writer::empty_tag('input', ['type' => 'hidden', 'name' => 'cmid', 'value' => $cmid]);
+    echo html_writer::empty_tag('input', ['type' => 'hidden', 'name' => 'sesskey', 'value' => sesskey()]);
+
+    echo html_writer::start_div('');
+    echo html_writer::tag('label', get_string('selectstudent', 'availability_stripepayment'), [
+        'for' => 'grant_userid',
+        'class' => 'form-label mb-1 small fw-semibold',
+    ]);
+    echo html_writer::select($eligibletogrant, 'userid', '', ['' => get_string('selectstudent', 'availability_stripepayment')], [
+        'id' => 'grant_userid',
+        'class' => 'form-select form-select-sm',
+        'style' => 'min-width:260px',
+        'required' => 'required',
+    ]);
+    echo html_writer::end_div();
+
+    echo html_writer::tag('button', get_string('grantaccess', 'availability_stripepayment'), [
+        'type' => 'submit',
+        'class' => 'btn btn-sm btn-outline-primary',
+    ]);
+    echo html_writer::end_tag('form');
+} else {
+    echo $OUTPUT->notification(get_string('nostudentstogrant', 'availability_stripepayment'), 'info');
 }
 
 echo $OUTPUT->footer();

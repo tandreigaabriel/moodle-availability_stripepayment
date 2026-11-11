@@ -73,11 +73,19 @@ if ($payment->status !== 'completed') {
 
             if ($stripesession->payment_status === 'paid') {
                 $payment->status = 'completed';
+                $payment->stripe_payment_intent = $stripesession->payment_intent ?? null;
                 $payment->timemodified = time();
                 $DB->update_record('availability_stripepayment_payments', $payment);
 
                 // Clear course modinfo cache.
                 rebuild_course_cache($payment->courseid, true);
+
+                \availability_stripepayment\event\payment_completed::create([
+                    'objectid' => $payment->id,
+                    'context' => context_module::instance($payment->cmid),
+                    'relateduserid' => $payment->userid,
+                    'other' => ['source' => 'stripe'],
+                ])->trigger();
 
                 availability_stripepayment_send_payment_notifications($payment, $stripesession);
             }
