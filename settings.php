@@ -43,21 +43,19 @@ if ($hassiteconfig && isset($settings)) {
     ));
 
     // Stripe secret key.
-    $settings->add(new admin_setting_configtext(
+    $settings->add(new admin_setting_configpasswordunmask(
         'availability_stripepayment/stripe_secret_key',
         get_string('stripe_secret_key', 'availability_stripepayment'),
         get_string('stripe_secret_key_desc', 'availability_stripepayment'),
-        '',
-        PARAM_TEXT
+        ''
     ));
 
     // Webhook secret.
-    $settings->add(new admin_setting_configtext(
+    $settings->add(new admin_setting_configpasswordunmask(
         'availability_stripepayment/webhook_secret',
         get_string('webhook_secret', 'availability_stripepayment'),
         get_string('webhook_secret_desc', 'availability_stripepayment'),
-        '',
-        PARAM_TEXT
+        ''
     ));
 
     // Accounts email.

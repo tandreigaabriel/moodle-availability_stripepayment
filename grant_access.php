@@ -40,6 +40,15 @@ require_capability('moodle/course:manageactivities', $context);
 
 $student = $DB->get_record('user', ['id' => $userid], '*', MUST_EXIST);
 
+if (!availability_stripepayment_can_grant($context, $userid)) {
+    redirect(
+        $reporturl,
+        get_string('grantnotenrolled', 'availability_stripepayment'),
+        null,
+        \core\output\notification::NOTIFY_ERROR
+    );
+}
+
 if (availability_stripepayment_has_paid($userid, $cmid)) {
     redirect(
         $reporturl,
@@ -54,7 +63,7 @@ $info = new \core_availability\info_module($modinfo->get_cm($cmid));
 $tree = $info->get_availability_tree();
 $stripecondition = availability_stripepayment_find_condition($tree);
 
-$amount = $stripecondition ? (int) $stripecondition->amount : 0;
+$amount = $stripecondition ? round((float) $stripecondition->amount, 2) : 0;
 $currency = $stripecondition ? strtoupper($stripecondition->currency ?? 'usd') : 'USD';
 
 $payment = new stdClass();

@@ -24,6 +24,7 @@
 
 require(__DIR__ . '/../../../config.php');
 require_once($CFG->libdir . '/tablelib.php');
+require_once(__DIR__ . '/lib.php');
 
 $courseid = optional_param('courseid', 0, PARAM_INT);
 $status = optional_param('status', '', PARAM_ALPHA);
@@ -78,6 +79,7 @@ if ($status && in_array($status, $validstatuses)) {
 // Handle download (CSV/Excel).
 if ($download) {
     $table = new \availability_stripepayment\transactions_table();
+    $table->courseid = $courseid;
     $table->set_sql($table->sql->fields, $table->sql->from, $where, $params);
     $table->is_downloading(
         $download,
@@ -108,11 +110,15 @@ echo html_writer::link('https://dashboard.stripe.com/payments', get_string('stri
 echo html_writer::end_div();
 echo html_writer::end_div();
 // Filter form.
+// Teachers only see their own course in the filter; site managers see every course with payments.
+$coursefilter = availability_stripepayment_can_refund() ? '' : 'WHERE c.id = :onlycourse';
 $courseswithpayments = $DB->get_records_sql(
     "SELECT DISTINCT c.id, c.fullname
        FROM {course} c
        JOIN {availability_stripepayment_payments} p ON p.courseid = c.id
-      ORDER BY c.fullname"
+       $coursefilter
+      ORDER BY c.fullname",
+    ['onlycourse' => $courseid]
 );
 
 $baseurl = new moodle_url('/availability/condition/stripepayment/transactions.php');
@@ -127,7 +133,7 @@ echo html_writer::tag('label', get_string('course', 'moodle'), [
     'for' => 'filter_courseid',
     'class' => 'form-label mb-1 small fw-semibold',
 ]);
-$courseoptions = [0 => get_string('allcourses', 'availability_stripepayment')];
+$courseoptions = availability_stripepayment_can_refund() ? [0 => get_string('allcourses', 'availability_stripepayment')] : [];
 foreach ($courseswithpayments as $c) {
     $courseoptions[$c->id] = format_string($c->fullname);
 }
@@ -197,6 +203,7 @@ if ($courseid || $status) {
 
 // Display table.
 $table = new \availability_stripepayment\transactions_table();
+$table->courseid = $courseid;
 $table->set_sql($table->sql->fields, $table->sql->from, $where, $params);
 $table->out($perpage, true);
 

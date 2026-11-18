@@ -49,5 +49,14 @@ function xmldb_availability_stripepayment_upgrade($oldversion) {
         upgrade_plugin_savepoint(true, 2026071200, 'availability', 'stripepayment');
     }
 
+    if ($oldversion < 2026111900) {
+        // Prices like 9.99 were truncated to 9: store the amount with two decimals. Existing values are unchanged.
+        $table = new xmldb_table('availability_stripepayment_payments');
+        $field = new xmldb_field('amount', XMLDB_TYPE_NUMBER, '12, 2', null, XMLDB_NOTNULL, null, null, 'stripe_payment_intent');
+        $dbman->change_field_type($table, $field);
+
+        upgrade_plugin_savepoint(true, 2026111900, 'availability', 'stripepayment');
+    }
+
     return true;
 }
