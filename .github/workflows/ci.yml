@@ -41,6 +41,8 @@ jobs:
         with:
           php-version: ${{ matrix.php }}
           extensions: mysqli, pdo, mbstring, curl, xml, zip, intl
+          ini-values: max_input_vars=5000
+          coverage: none
 
       - name: Install moodle-plugin-ci
         run: |
