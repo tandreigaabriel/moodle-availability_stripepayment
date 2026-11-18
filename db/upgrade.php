@@ -29,6 +29,34 @@
  * @return bool True on success.
  */
 function xmldb_availability_stripepayment_upgrade($oldversion) {
-    // No upgrade steps needed yet.
+    global $DB;
+
+    $dbman = $DB->get_manager();
+
+    if ($oldversion < 2026071200) {
+        $table = new xmldb_table('availability_stripepayment_payments');
+
+        $field = new xmldb_field('source', XMLDB_TYPE_CHAR, '20', null, XMLDB_NOTNULL, null, 'stripe', 'status');
+        if (!$dbman->field_exists($table, $field)) {
+            $dbman->add_field($table, $field);
+        }
+
+        $field = new xmldb_field('grantedby', XMLDB_TYPE_INTEGER, '10', null, null, null, null, 'source');
+        if (!$dbman->field_exists($table, $field)) {
+            $dbman->add_field($table, $field);
+        }
+
+        upgrade_plugin_savepoint(true, 2026071200, 'availability', 'stripepayment');
+    }
+
+    if ($oldversion < 2026111900) {
+        // Prices like 9.99 were truncated to 9: store the amount with two decimals. Existing values are unchanged.
+        $table = new xmldb_table('availability_stripepayment_payments');
+        $field = new xmldb_field('amount', XMLDB_TYPE_NUMBER, '12, 2', null, XMLDB_NOTNULL, null, null, 'stripe_payment_intent');
+        $dbman->change_field_type($table, $field);
+
+        upgrade_plugin_savepoint(true, 2026111900, 'availability', 'stripepayment');
+    }
+
     return true;
 }

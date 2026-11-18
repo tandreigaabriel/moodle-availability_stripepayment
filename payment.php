@@ -102,7 +102,7 @@ if (!$stripecondition) {
     );
 }
 
-$amount = (int) $stripecondition->amount;
+$amount = round((float) $stripecondition->amount, 2);
 $currency = strtolower($stripecondition->currency ?? 'usd');
 $itemname = $stripecondition->itemname ?: $cm->name;
 
@@ -114,28 +114,10 @@ if (!preg_match('/^[a-z]{3}$/', $currency)) {
     redirect(new moodle_url('/course/view.php', ['id' => $cm->course]));
 }
 
-$zerodecimalcurrencies = [
-    'BIF',
-    'CLP',
-    'DJF',
-    'GNF',
-    'JPY',
-    'KMF',
-    'KRW',
-    'MGA',
-    'PYG',
-    'RWF',
-    'UGX',
-    'VND',
-    'VUV',
-    'XAF',
-    'XOF',
-    'XPF',
-];
-
-$stripeunitamount = in_array(strtoupper($currency), $zerodecimalcurrencies)
-    ? $amount
-    : $amount * 100;
+$stripeunitamount = availability_stripepayment_to_minor_units($amount, $currency);
+if ($stripeunitamount <= 0) {
+    redirect(new moodle_url('/course/view.php', ['id' => $cm->course]));
+}
 
 \Stripe\Stripe::setApiKey($config->stripe_secret_key);
 

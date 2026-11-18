@@ -24,6 +24,9 @@ namespace availability_stripepayment;
  * @license     https://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
  */
 class transactions_table extends \table_sql {
+    /** @var int Course the report is limited to (0 = all courses, site managers only). */
+    public $courseid = 0;
+
     /**
      * Table setup.
      */
@@ -44,14 +47,19 @@ class transactions_table extends \table_sql {
             $headers[] = \core_user\fields::get_display_name($field);
         }
 
-        $columns = array_merge($columns, ['amount', 'currency', 'status', 'stripe_session_id', 'timecreated', 'stripe_link']);
+        $columns = array_merge(
+            $columns,
+            ['amount', 'currency', 'status', 'source', 'stripe_session_id', 'timecreated', 'stripe_link', 'actions']
+        );
         $headers = array_merge($headers, [
             get_string('amount', 'availability_stripepayment'),
             get_string('currency', 'availability_stripepayment'),
             get_string('status'),
+            get_string('source', 'availability_stripepayment'),
             get_string('transactionid', 'availability_stripepayment'),
             get_string('time'),
             'Stripe',
+            '',
         ]);
 
         $this->define_columns($columns);
@@ -59,8 +67,8 @@ class transactions_table extends \table_sql {
 
         $userfields = \core_user\fields::for_name()->with_identity($PAGE->context)->get_sql('u');
 
-        $fields = 'p.id, p.userid, p.courseid, p.cmid, p.stripe_session_id, ' .
-            'p.amount, p.currency, p.status, p.timecreated, p.timemodified, ' .
+        $fields = 'p.id, p.userid, p.courseid, p.cmid, p.stripe_session_id, p.stripe_payment_intent, ' .
+            'p.amount, p.currency, p.status, p.source, p.timecreated, p.timemodified, ' .
             'c.shortname as course_shortname, m.name as modname_raw, cm.instance as cm_instance' .
             $userfields->selects;
 
@@ -113,8 +121,9 @@ class transactions_table extends \table_sql {
     public function col_item($data) {
         global $PAGE;
 
-        $itemname = $this->get_activity_name($data);
-        $coursepart = $data->course_shortname . ' / ';
+        $coursecontext = \context_course::instance($data->courseid);
+        $itemname = format_string($this->get_activity_name($data), true, ['context' => $coursecontext]);
+        $coursepart = format_string($data->course_shortname, true, ['context' => $coursecontext]) . ' / ';
 
         if ($this->is_downloading()) {
             return $coursepart . $itemname;
@@ -134,6 +143,43 @@ class transactions_table extends \table_sql {
         }
 
         return \html_writer::span($coursepart . $link, $itemclass);
+    }
+
+    /**
+     * Totals shown above the report, limited to one course when $courseid is set.
+     *
+     * @param int $courseid Course id, or 0 for every course.
+     * @return \stdClass total, completed and pending counts and revenue rows (currency, total) for completed payments.
+     */
+    public static function summary(int $courseid): \stdClass {
+        global $DB;
+
+        $where = $courseid ? 'courseid = :courseid' : '1=1';
+        $params = $courseid ? ['courseid' => $courseid] : [];
+        $count = function (string $status = '') use ($DB, $where, $params): int {
+            if ($status === '') {
+                return $DB->count_records_select('availability_stripepayment_payments', $where, $params);
+            }
+            return $DB->count_records_select(
+                'availability_stripepayment_payments',
+                "$where AND status = :status",
+                $params + ['status' => $status]
+            );
+        };
+
+        return (object) [
+            'total' => $count(),
+            'completed' => $count('completed'),
+            'pending' => $count('pending'),
+            'revenue' => $DB->get_records_sql(
+                "SELECT currency, SUM(amount) AS total
+                   FROM {availability_stripepayment_payments}
+                  WHERE $where AND status = 'completed'
+               GROUP BY currency
+               ORDER BY currency",
+                $params
+            ),
+        ];
     }
 
     /**
@@ -208,9 +254,52 @@ class transactions_table extends \table_sql {
                 return \html_writer::span(get_string('cancelled', 'availability_stripepayment'), 'badge bg-secondary');
             case 'expired':
                 return \html_writer::span(get_string('expired', 'availability_stripepayment'), 'badge bg-secondary');
+            case 'refunded':
+                return \html_writer::span(get_string('refunded', 'availability_stripepayment'), 'badge bg-dark');
             default:
                 return \html_writer::span(ucfirst($data->status), 'badge bg-warning text-dark');
         }
+    }
+
+    /**
+     * Format the payment source (Stripe or manual grant).
+     *
+     * @param object $data Row data.
+     * @return string Formatted source label.
+     */
+    public function col_source($data) {
+        if ($data->source === 'manual') {
+            $label = get_string('sourcemanual', 'availability_stripepayment');
+            return $this->is_downloading() ? $label : \html_writer::span($label, 'badge bg-light text-dark border');
+        }
+
+        $label = get_string('sourcestripe', 'availability_stripepayment');
+        return $this->is_downloading() ? $label : \html_writer::span($label, 'badge bg-light text-dark border');
+    }
+
+    /**
+     * Render the refund action link for eligible completed Stripe payments.
+     *
+     * @param object $data Row data.
+     * @return string Refund link HTML, or dash if not applicable.
+     */
+    public function col_actions($data) {
+        if ($this->is_downloading()) {
+            return '';
+        }
+
+        if (
+            $data->status !== 'completed' || $data->source !== 'stripe' || empty($data->stripe_payment_intent) ||
+                !availability_stripepayment_can_refund()
+        ) {
+            return '-';
+        }
+
+        $refundurl = new \moodle_url('/availability/condition/stripepayment/refund.php', ['id' => $data->id]);
+
+        return \html_writer::link($refundurl, get_string('refund', 'availability_stripepayment'), [
+            'class' => 'btn btn-sm btn-outline-danger',
+        ]);
     }
 
     /**
@@ -299,19 +388,11 @@ class transactions_table extends \table_sql {
             return;
         }
 
-        global $DB;
-
-        $totalpayments = $DB->count_records('availability_stripepayment_payments');
-        $completedpayments = $DB->count_records('availability_stripepayment_payments', ['status' => 'completed']);
-        $pendingpayments = $DB->count_records('availability_stripepayment_payments', ['status' => 'pending']);
-
-        $revenuerows = $DB->get_records_sql(
-            "SELECT currency, SUM(amount) AS total
-               FROM {availability_stripepayment_payments}
-              WHERE status = 'completed'
-              GROUP BY currency
-              ORDER BY currency"
-        );
+        $summary = self::summary((int) $this->courseid);
+        $totalpayments = $summary->total;
+        $completedpayments = $summary->completed;
+        $pendingpayments = $summary->pending;
+        $revenuerows = $summary->revenue;
 
         $zerodecimal = [
             'BIF', 'CLP', 'DJF', 'GNF', 'JPY', 'KMF', 'KRW', 'MGA',

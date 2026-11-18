@@ -163,6 +163,53 @@ function availability_stripepayment_create_payment($userid, $cmid, $courseid, $s
 }
 
 /**
+ * Currencies that Stripe charges without decimal places.
+ *
+ * @return string[] Upper-case ISO 4217 codes.
+ */
+function availability_stripepayment_zero_decimal_currencies(): array {
+    return ['BIF', 'CLP', 'DJF', 'GNF', 'JPY', 'KMF', 'KRW', 'MGA', 'PYG', 'RWF', 'UGX', 'VND', 'VUV', 'XAF', 'XOF', 'XPF'];
+}
+
+/**
+ * Convert a price as entered by the teacher (e.g. 9.99) to the amount Stripe charges.
+ *
+ * @param float $amount Price in major units, up to two decimal places.
+ * @param string $currency ISO 4217 code.
+ * @return int Amount in the currency's smallest unit (9.99 GBP -> 999, 1000 JPY -> 1000).
+ */
+function availability_stripepayment_to_minor_units(float $amount, string $currency): int {
+    if (in_array(strtoupper($currency), availability_stripepayment_zero_decimal_currencies(), true)) {
+        return (int) round($amount);
+    }
+    return (int) round($amount * 100);
+}
+
+/**
+ * Whether the current user may refund Stripe payments (money leaves the site's Stripe account).
+ *
+ * Only users with the site-level manage transactions capability (managers and administrators by default);
+ * teachers can view the payments of their course but cannot refund them.
+ *
+ * @return bool
+ */
+function availability_stripepayment_can_refund(): bool {
+    return has_capability('availability/stripepayment:managetransactions', context_system::instance());
+}
+
+/**
+ * Whether the current user may grant free access to a paid activity for a user.
+ *
+ * @param context_module $context Activity context.
+ * @param int $userid User who would receive access.
+ * @return bool True for editing teachers, and only for users enrolled in the course.
+ */
+function availability_stripepayment_can_grant(context_module $context, int $userid): bool {
+    return has_capability('moodle/course:manageactivities', $context)
+        && is_enrolled($context->get_course_context(), $userid);
+}
+
+/**
  * Build an HTML email body.
  *
  * @param string      $title   Email title shown in the header bar.
@@ -254,6 +301,29 @@ function availability_stripepayment_send_payment_notifications($payment, $sessio
 
     $accountsuser = $DB->get_record('user', ['email' => $accountsemail, 'deleted' => 0]) ?: get_admin();
     email_to_user($accountsuser, core_user::get_noreply_user(), $accountssubject, $accountsmessage, $accountshtml);
+
+    // Receipt to the student who paid.
+    $studentsubject = get_string('email_student_subject', 'availability_stripepayment', $cm->name);
+    $studentmessage = get_string('email_student_body', 'availability_stripepayment') . "\n\n"
+        . get_string('email_accounts_row_activity', 'availability_stripepayment') . ': ' . $cm->name . "\n"
+        . get_string('email_accounts_row_course', 'availability_stripepayment') . ': ' . $course->fullname . "\n"
+        . get_string('amount', 'availability_stripepayment') . ': ' . $amountdisplay . "\n"
+        . get_string('payment_detail_id', 'availability_stripepayment') . ': ' . $session->id . "\n"
+        . get_string('email_accounts_row_date', 'availability_stripepayment') . ': ' . userdate(time());
+
+    $studenthtml = availability_stripepayment_email_html(
+        $studentsubject,
+        get_string('email_student_body', 'availability_stripepayment'),
+        [
+            [get_string('email_accounts_row_activity', 'availability_stripepayment'), $cm->name],
+            [get_string('email_accounts_row_course', 'availability_stripepayment'), $course->fullname],
+            [get_string('amount', 'availability_stripepayment'), $amountdisplay],
+            [get_string('payment_detail_id', 'availability_stripepayment'), $session->id],
+            [get_string('email_accounts_row_date', 'availability_stripepayment'), userdate(time())],
+        ]
+    );
+
+    email_to_user($user, core_user::get_noreply_user(), $studentsubject, $studentmessage, $studenthtml);
 
     return true;
 }
