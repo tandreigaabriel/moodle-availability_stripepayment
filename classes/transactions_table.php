@@ -24,6 +24,9 @@ namespace availability_stripepayment;
  * @license     https://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
  */
 class transactions_table extends \table_sql {
+    /** @var int Course the report is limited to (0 = all courses, site managers only). */
+    public $courseid = 0;
+
     /**
      * Table setup.
      */
@@ -118,8 +121,9 @@ class transactions_table extends \table_sql {
     public function col_item($data) {
         global $PAGE;
 
-        $itemname = $this->get_activity_name($data);
-        $coursepart = $data->course_shortname . ' / ';
+        $coursecontext = \context_course::instance($data->courseid);
+        $itemname = format_string($this->get_activity_name($data), true, ['context' => $coursecontext]);
+        $coursepart = format_string($data->course_shortname, true, ['context' => $coursecontext]) . ' / ';
 
         if ($this->is_downloading()) {
             return $coursepart . $itemname;
@@ -139,6 +143,43 @@ class transactions_table extends \table_sql {
         }
 
         return \html_writer::span($coursepart . $link, $itemclass);
+    }
+
+    /**
+     * Totals shown above the report, limited to one course when $courseid is set.
+     *
+     * @param int $courseid Course id, or 0 for every course.
+     * @return \stdClass total, completed and pending counts and revenue rows (currency, total) for completed payments.
+     */
+    public static function summary(int $courseid): \stdClass {
+        global $DB;
+
+        $where = $courseid ? 'courseid = :courseid' : '1=1';
+        $params = $courseid ? ['courseid' => $courseid] : [];
+        $count = function (string $status = '') use ($DB, $where, $params): int {
+            if ($status === '') {
+                return $DB->count_records_select('availability_stripepayment_payments', $where, $params);
+            }
+            return $DB->count_records_select(
+                'availability_stripepayment_payments',
+                "$where AND status = :status",
+                $params + ['status' => $status]
+            );
+        };
+
+        return (object) [
+            'total' => $count(),
+            'completed' => $count('completed'),
+            'pending' => $count('pending'),
+            'revenue' => $DB->get_records_sql(
+                "SELECT currency, SUM(amount) AS total
+                   FROM {availability_stripepayment_payments}
+                  WHERE $where AND status = 'completed'
+               GROUP BY currency
+               ORDER BY currency",
+                $params
+            ),
+        ];
     }
 
     /**
@@ -247,7 +288,10 @@ class transactions_table extends \table_sql {
             return '';
         }
 
-        if ($data->status !== 'completed' || $data->source !== 'stripe' || empty($data->stripe_payment_intent)) {
+        if (
+            $data->status !== 'completed' || $data->source !== 'stripe' || empty($data->stripe_payment_intent) ||
+                !availability_stripepayment_can_refund()
+        ) {
             return '-';
         }
 
@@ -344,19 +388,11 @@ class transactions_table extends \table_sql {
             return;
         }
 
-        global $DB;
-
-        $totalpayments = $DB->count_records('availability_stripepayment_payments');
-        $completedpayments = $DB->count_records('availability_stripepayment_payments', ['status' => 'completed']);
-        $pendingpayments = $DB->count_records('availability_stripepayment_payments', ['status' => 'pending']);
-
-        $revenuerows = $DB->get_records_sql(
-            "SELECT currency, SUM(amount) AS total
-               FROM {availability_stripepayment_payments}
-              WHERE status = 'completed'
-              GROUP BY currency
-              ORDER BY currency"
-        );
+        $summary = self::summary((int) $this->courseid);
+        $totalpayments = $summary->total;
+        $completedpayments = $summary->completed;
+        $pendingpayments = $summary->pending;
+        $revenuerows = $summary->revenue;
 
         $zerodecimal = [
             'BIF', 'CLP', 'DJF', 'GNF', 'JPY', 'KMF', 'KRW', 'MGA',

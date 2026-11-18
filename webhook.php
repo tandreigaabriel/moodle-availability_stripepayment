@@ -221,6 +221,9 @@ try {
         '[availability_stripepayment] Processing error: ' . $e->getMessage(),
         DEBUG_DEVELOPER
     );
+    // Answer with an error so Stripe retries the event; a retry of an already completed payment is a no-op.
+    http_response_code(500);
+    exit(get_string('webhook_error', 'availability_stripepayment'));
 }
 
 // Always return 200 so Stripe does not retry.

@@ -68,6 +68,7 @@ $string['grantaccessconfirm'] = 'Grant {$a} access to this activity without requ
 $string['grantaccessdesc'] = 'Manually mark a student as paid without going through Stripe (e.g. a cash payment, scholarship, or goodwill access).';
 $string['grantedaccessto'] = 'Access granted to {$a}.';
 $string['grantedby'] = 'Granted by';
+$string['grantnotenrolled'] = 'Access can only be granted to users enrolled in this course.';
 $string['id'] = 'ID';
 $string['invalid_amount'] = 'Invalid payment amount';
 $string['invalid_amount_admin'] = 'Invalid payment amount configured. Please contact administrator.';

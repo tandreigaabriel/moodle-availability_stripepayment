@@ -35,12 +35,8 @@ $context = context_course::instance($payment->courseid);
 
 require_login($course);
 
-if (
-    !has_capability('availability/stripepayment:managetransactions', context_system::instance()) &&
-    !has_capability('moodle/course:manageactivities', $context)
-) {
-    require_capability('availability/stripepayment:managetransactions', context_system::instance());
-}
+// Refunds move money out of the site's Stripe account: site managers only, not course teachers.
+require_capability('availability/stripepayment:managetransactions', context_system::instance());
 
 $returnurl = new moodle_url('/availability/condition/stripepayment/transactions.php');
 
