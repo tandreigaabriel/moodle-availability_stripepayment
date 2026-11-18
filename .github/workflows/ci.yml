@@ -73,3 +73,9 @@ jobs:
 
       - name: Mustache Lint
         run: moodle-plugin-ci mustache moodle/availability/condition/stripepayment
+
+      - name: Upgrade savepoints
+        run: moodle-plugin-ci savepoints ./plugin
+
+      - name: PHPUnit tests
+        run: moodle-plugin-ci phpunit ./plugin --fail-on-warning
