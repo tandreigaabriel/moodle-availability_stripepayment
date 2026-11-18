@@ -61,6 +61,7 @@ $string['error_not_configured'] = 'Plata Stripe nu este configurată corect.';
 $string['expired'] = 'Expirat';
 $string['failed'] = 'Eșuat';
 $string['filteractive'] = 'Filtrat după:';
+$string['grantnotenrolled'] = 'Accesul poate fi acordat doar utilizatorilor înscriși la acest curs.';
 $string['id'] = 'ID';
 $string['invalid_amount'] = 'Sumă de plată invalidă';
 $string['invalid_amount_admin'] = 'Sumă de plată invalidă configurată. Contactați administratorul.';

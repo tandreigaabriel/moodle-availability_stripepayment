@@ -26,6 +26,7 @@ defined('MOODLE_INTERNAL') || die();
 
 $capabilities = [
     'availability/stripepayment:managetransactions' => [
+        'riskbitmask' => RISK_PERSONAL | RISK_CONFIG,
         'captype' => 'write',
         'contextlevel' => CONTEXT_SYSTEM,
         'archetypes' => [
