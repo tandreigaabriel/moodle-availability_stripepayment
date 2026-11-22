@@ -1,0 +1,159 @@
+name: Release Plugin version to Moodle Marketplace
+
+# Pushing a tag vX.Y.Z publishes that commit as a new version in the Moodle Marketplace.
+# Unlike the generic moodlehq workflow this one bundles the Stripe PHP SDK (vendor/ is not in
+# Git) at the version declared in thirdpartylibs.xml, so the ZIP is installable as-is.
+# The plugin must already exist in the Marketplace (first version is uploaded by hand).
+# Token: repository secret MOODLE_MARKETPLACE_TOKEN (marketplace.moodle.com/account/security).
+
+on:
+  push:
+    tags:
+      - 'v*'
+  workflow_dispatch:
+    inputs:
+      tag:
+        description: 'Tag to be released (e.g. v1.5.1)'
+        required: true
+      dry_run:
+        description: 'Build the ZIP and the release notes only, do not submit'
+        type: boolean
+        default: false
+
+defaults:
+  run:
+    shell: bash
+
+jobs:
+  release-to-marketplace:
+    runs-on: ubuntu-latest
+    env:
+      BASE_URL: 'https://marketplace.moodle.com/api'
+      GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+
+    steps:
+      - name: Resolve tag name
+        id: resolve-tag
+        run: |
+          TAGNAME="${{ inputs.tag }}"
+          if [[ -z "${TAGNAME}" && $GITHUB_REF == refs/tags/* ]]; then
+            TAGNAME="${GITHUB_REF##*/}"
+          fi
+          if [[ -z "${TAGNAME}" ]]; then
+            echo "::error::No tag name provided!"
+            exit 1
+          fi
+          echo "tag=${TAGNAME}" >> "$GITHUB_OUTPUT"
+
+      - name: Checkout code
+        uses: actions/checkout@v5
+        with:
+          ref: ${{ steps.resolve-tag.outputs.tag }}
+
+      - name: Setup PHP
+        uses: shivammathur/setup-php@v2
+        with:
+          php-version: '8.1'
+          tools: composer
+
+      - name: Check that the tag matches version.php
+        id: version
+        env:
+          TAGNAME: ${{ steps.resolve-tag.outputs.tag }}
+        run: |
+          RELEASE=$(php -r '$c = file_get_contents("version.php"); preg_match("/release\s*=\s*[\x27\"]([^\x27\"]+)[\x27\"]/", $c, $m); echo $m[1] ?? "";')
+          COMPONENT=$(php -r '$c = file_get_contents("version.php"); preg_match("/component\s*=\s*[\x27\"]([a-z0-9_]+)[\x27\"]/", $c, $m); echo $m[1] ?? "";')
+          if [[ -z "$COMPONENT" || -z "$RELEASE" ]]; then
+            echo "::error::Could not read \$plugin->component / \$plugin->release from version.php"
+            exit 1
+          fi
+          if [[ "v${RELEASE}" != "${TAGNAME}" ]]; then
+            echo "::error::Tag ${TAGNAME} does not match \$plugin->release = ${RELEASE}"
+            exit 1
+          fi
+          echo "component=${COMPONENT}" >> "$GITHUB_OUTPUT"
+          echo "release=${RELEASE}" >> "$GITHUB_OUTPUT"
+
+      - name: Bundle the Stripe PHP SDK (version from thirdpartylibs.xml)
+        run: |
+          SDK=$(php -r '$x = simplexml_load_file("thirdpartylibs.xml"); foreach ($x->library as $l) { if ((string) $l->location === "vendor/stripe/stripe-php") { echo (string) $l->version; } }')
+          if [[ -z "$SDK" ]]; then
+            echo "::error::Stripe SDK version not found in thirdpartylibs.xml"
+            exit 1
+          fi
+          echo "Bundling stripe/stripe-php ${SDK}"
+          composer require "stripe/stripe-php:${SDK}" --update-no-dev --no-interaction --no-progress
+          git checkout -- composer.json
+          rm -f composer.lock vendor/stripe/stripe-php/README.md
+          test -f vendor/autoload.php
+
+      - name: Build ZIP package
+        id: package
+        env:
+          COMPONENT: ${{ steps.version.outputs.component }}
+        run: |
+          DIRNAME="${COMPONENT#*_}"
+          ZIP_FILE="${DIRNAME}.zip"
+          mkdir -p /tmp/pkg
+          rsync -a --exclude .git --exclude .github --exclude node_modules --exclude '*.zip' ./ "/tmp/pkg/${DIRNAME}/"
+          (cd /tmp/pkg && zip -qr "${GITHUB_WORKSPACE}/${ZIP_FILE}" "${DIRNAME}")
+          unzip -l "${ZIP_FILE}" | tail -1
+          echo "zip_file=${ZIP_FILE}" >> "$GITHUB_OUTPUT"
+
+      - name: Upload ZIP as workflow artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: ${{ steps.package.outputs.zip_file }}
+          path: ${{ steps.package.outputs.zip_file }}
+
+      - name: Extract release notes
+        id: release_notes
+        env:
+          TAGNAME: ${{ steps.resolve-tag.outputs.tag }}
+          RELEASE: ${{ steps.version.outputs.release }}
+        run: |
+          # GitHub Release body for the tag, else the section of this version in CHANGES.md.
+          NOTES=$(gh release view "$TAGNAME" --json body -q '.body' 2>/dev/null || true)
+          if [[ -z "${NOTES}" && -f CHANGES.md ]]; then
+            NOTES=$(awk -v v="$RELEASE" '
+              /^## /{ if (on) exit; on = index($0, "## " v) == 1; next }
+              on { print }' CHANGES.md | sed '/./,$!d')
+          fi
+          if [[ -z "${NOTES}" ]]; then
+            echo "::warning::No release notes could be determined, the version will be submitted without release notes"
+          fi
+          DELIMITER="notes-$(date +%s%N)"
+          {
+            echo "notes<<${DELIMITER}"
+            echo "$NOTES"
+            echo "${DELIMITER}"
+          } >> "$GITHUB_OUTPUT"
+          echo "Release notes:"
+          echo "$NOTES"
+
+      - name: Submit version to Marketplace API
+        if: ${{ !inputs.dry_run }}
+        env:
+          TOKEN: ${{ secrets.MOODLE_MARKETPLACE_TOKEN }}
+          TAGNAME: ${{ steps.resolve-tag.outputs.tag }}
+          COMPONENT: ${{ steps.version.outputs.component }}
+          ZIP_FILE: ${{ steps.package.outputs.zip_file }}
+          NOTES: ${{ steps.release_notes.outputs.notes }}
+        run: |
+          ENDPOINT="${BASE_URL}/plugins/${COMPONENT}/versions"
+          echo "Submitting ${ZIP_FILE} for ${COMPONENT} to ${ENDPOINT}..."
+          HTTP_STATUS=$(curl -s -o response.json -w "%{http_code}" \
+            -X POST \
+            -H "Authorization: Bearer ${TOKEN}" \
+            -F "file=@${ZIP_FILE}" \
+            --form-string "releaseNotes=${NOTES}" \
+            --form-string "vcsTag=${TAGNAME}" \
+            "${ENDPOINT}")
+          echo "Response HTTP Status: ${HTTP_STATUS}"
+          jq . response.json 2>/dev/null || cat response.json
+          if [[ "${HTTP_STATUS}" -ne 201 ]]; then
+            echo "::error::API returned failure status: ${HTTP_STATUS}"
+            jq '.violations' response.json 2>/dev/null || true
+            exit 1
+          fi
+          echo "Successfully created version ID: $(jq -r '.id' response.json)"
