@@ -1,9 +1,9 @@
 <?xml version="1.0" encoding="UTF-8"?>
-<thirdpartylibs>
+<libraries>
     <library>
         <name>Stripe PHP Library</name>
-        <location>vendor/stripe/stripe-php</location>
+        <location>vendor</location>
         <version>13.18.0</version>
         <license>MIT</license>
     </library>
-</thirdpartylibs>
+</libraries>
