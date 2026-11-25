@@ -19,15 +19,15 @@
  *
  * @package    availability_stripepayment
  * @author     Andrei Toma
- * @copyright  2026 Andrei Toma <https://www.tagwebdesign.co.uk>
+ * @copyright  2026 TAG Digital Solutions Ltd <https://tandreig.com>
  * @license    https://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
  */
 
 defined('MOODLE_INTERNAL') || die();
 
 $plugin->component = 'availability_stripepayment';
-$plugin->version = 2026111900;
+$plugin->version = 2026112500;
 $plugin->requires = 2024042200; // Moodle 4.5+.
 $plugin->supported = [405, 500];
 $plugin->maturity = MATURITY_STABLE;
-$plugin->release = '1.5.1';
+$plugin->release = '1.5.2';
