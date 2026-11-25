@@ -264,12 +264,12 @@ The library is included in the `vendor/` directory.
 
 ## Support & Donation
 
-Developed and maintained by **Andrei Toma** at [tagwebdesign.co.uk](https://www.tagwebdesign.co.uk).
+Developed and maintained by Andrei Toma — TAG Digital Solutions Ltd (trading as TAG Web Design & Development), [tandreig.com](https://tandreig.com).
 
 - GitHub repository: [tandreigaabriel/moodle-availability_stripepayment](https://github.com/tandreigaabriel/moodle-availability_stripepayment)
 - Bug reports & feature requests: [open an issue on GitHub](https://github.com/tandreigaabriel/moodle-availability_stripepayment/issues)
 
-If this plugin saves you time, please consider supporting its development — donations are welcome at [tandreig.com/plugins](https://www.tandreig.com/plugins).
+If this plugin saves you time, please consider supporting its development — donations are welcome at [tandreig.com/plugins](https://tandreig.com/plugins).
 
 ---
 
@@ -277,7 +277,7 @@ If this plugin saves you time, please consider supporting its development — do
 
 This plugin is free software: you can redistribute it and/or modify it under the terms of the [GNU General Public License](https://www.gnu.org/licenses/gpl-3.0.html) as published by the Free Software Foundation, either version 3 of the License, or any later version.
 
-Copyright &copy; 2026 Andrei Toma — [tagwebdesign.co.uk](https://www.tagwebdesign.co.uk)
+Copyright &copy; 2026 TAG Digital Solutions Ltd — [tandreig.com](https://tandreig.com)
 
 ---
 

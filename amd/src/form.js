@@ -14,7 +14,8 @@
  * to init() as the second argument, ensuring synchronous access in getNode().
  *
  * @module     availability_stripepayment/form
- * @copyright  2026 Andrei Toma <https://www.tagwebdesign.co.uk>
+ * @copyright  2026 TAG Digital Solutions Ltd <https://tandreig.com>
+ * @author     Andrei Toma
  * @license    https://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
  */
 

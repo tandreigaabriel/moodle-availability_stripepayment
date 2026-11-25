@@ -26,7 +26,8 @@ require_once($CFG->libdir . '/tablelib.php');
  * Amounts, refund and grant permissions, and report totals.
  *
  * @package    availability_stripepayment
- * @copyright  2026 Andrei Toma
+ * @copyright  2026 TAG Digital Solutions Ltd <https://tandreig.com>
+ * @author     Andrei Toma
  * @license    https://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
  * @covers     ::availability_stripepayment_to_minor_units
  * @covers     ::availability_stripepayment_can_refund

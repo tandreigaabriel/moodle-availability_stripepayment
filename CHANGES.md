@@ -1,5 +1,10 @@
 # Changes
 
+## 1.5.2 (2026-11-25)
+
+- Copyright holder: TAG Digital Solutions Ltd (trading as TAG Web Design & Development); author Andrei Toma. No functional change.
+
+
 ## 1.5.1 (2026-11-19)
 
 - Prices with decimals are charged exactly: 9.99 was charged as 9.00 and recorded as 10. The amount column now stores two decimals (existing values are unchanged).
